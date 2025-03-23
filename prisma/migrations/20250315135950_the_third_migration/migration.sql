@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "BootcampLecture" ALTER COLUMN "startDate" SET DATA TYPE TEXT,
+ALTER COLUMN "startTime" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "BootcampMeetings" ALTER COLUMN "startDate" SET DATA TYPE TEXT,
+ALTER COLUMN "startTime" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "Lecture" ALTER COLUMN "startDate" SET DATA TYPE TEXT,
+ALTER COLUMN "startTime" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "Program" ALTER COLUMN "startDate" SET DATA TYPE TEXT,
+ALTER COLUMN "startTime" SET DATA TYPE TEXT;

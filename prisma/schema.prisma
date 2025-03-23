@@ -1,0 +1,1844 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                                  String                                @id @default(cuid())
+  email                               String?                               @unique
+  phoneNumber                         String?
+  firstName                           String?
+  lastName                            String?
+  password                            String?
+  count                               Int?                                  @unique @default(autoincrement())
+  isBlocked                           Boolean                               @default(false)
+  handle                              String?                               @unique
+  bio                                 String?
+  createdAt                           DateTime                              @default(now())
+  updatedAt                           DateTime                              @updatedAt
+  role                                UserRole                              @default(USER)
+  isAdmin                             Boolean                               @default(false)
+  isEmployee                          Boolean                               @default(false)
+  followerCount                       Int                                   @default(0)
+  followingCount                      Int                                   @default(0)
+  emailVerified                       DateTime?                             @map("email_verified")
+  admin                               Admin?
+  bootcamp                            Bootcamp[]
+  bootcampAnnouncement                BootcampAnnouncement[]
+  bootcampClass                       BootcampClass[]
+  bootcampClassAnnouncement           BootcampClassAnnouncement[]
+  bootcampClassChat                   BootcampClassChat[]
+  bootcampClassContact                BootcampClassContact[]
+  bootcampClassFeedback               BootcampClassFeedback[]
+  bootcampClassMediaUpload            BootcampClassMediaUpload[]
+  bootcampContact                     BootcampContact[]
+  bootcampCourse                      BootcampCourse[]
+  bootcampCourseSection               BootcampCourseSection[]
+  bootcampCourseVideo                 BootcampCourseVideo[]
+  bootcampFeedback                    BootcampFeedback[]
+  bootcampInstructor                  BootcampInstructor[]
+  bootcampLecture                     BootcampLecture[]
+  bootcampMediaUpload                 BootcampMediaUpload[]
+  bootcampStudent                     BootcampStudent[]
+  class                               Class[]
+  chats                               Chats[]
+  classAnnouncement                   ClassAnnouncement[]
+  classChats                          ClassChat[]
+  classContact                        ClassContact[]
+  classFeedback                       ClassFeedback[]
+  classmediaUploads                   ClassMediaUpload[]
+  comments                            Comment[]
+  course                              Course[]
+  courseMedia                         CourseMedia[]
+  courseSection                       CourseSection[]
+  employee                            Employee?
+  followers                           Follower[]
+  following                           Following[]
+  group                               Group[]
+  groupAdmins                         GroupAdmin[]
+  groupChats                          GroupChat[]
+  groupMembers                        GroupMember[]
+  instructors                         Instructor[]
+  lecture                             Lecture[]
+  likes                               Like[]
+  likeComment                         LikeComment[]
+  likeSubComment                      LikeSubComment[]
+  mediaUploads                        MediaUpload[]
+  post                                Post[]
+  rePost                              RePost[]
+  profile                             Profile?
+  program                             Program[]
+  students                            Student[]
+  subComment                          SubComment[]
+  accounts                            Account[]
+  thirdComment                        ThirdComment[]
+  likeThirdComment                    LikeThirdComment[]
+  likeGroupMedia                      LikeGroupMedia[]
+  likeClassMedia                      LikeClassMedia[]
+  likeClassCourseMedia                LikeClassCourseVideo[]
+  likeBootcampMedia                   LikeBootcampMedia[]
+  likeBootcampClassMedia              LikeBootcampClassMedia[]
+  likeBootcampCourseVideo             LikeBootcampCourseVideo[]
+  groupComment                        GroupComment[]
+  groupSubComment                     GroupSubComment[]
+  groupThirdCommment                  GroupThirdComment[]
+  classComment                        ClassComment[]
+  classSubComment                     ClassSubComment[]
+  classThirdComment                   ClassThirdComment[]
+  classCourseComment                  ClassCourseComment[]
+  classCourseSubComment               ClassCourseSubComment[]
+  classCourseThirdComment             ClassCourseThirdComment[]
+  bootcampComment                     BootcampComment[]
+  bootcampSubComment                  BootcampSubComment[]
+  bootcampThirdComment                BootcampThirdComment[]
+  bootcampClassComment                BootcampClassComment[]
+  bootcampClassSubComment             BootcampClassSubComment[]
+  bootcampClassThirdComment           BootcampClassThirdComment[]
+  bootcampClassCourseComment          BootcampClassCourseComment[]
+  bootcampClassCourseSubComment       BootcampClassCourseSubComment[]
+  bootcampClassCourseThirdComment     BootcampClassCourseThirdComment[]
+  likeGroupComment                    LikeGroupComment[]
+  likeGroupSubComment                 LikeGroupSubComment[]
+  likeGroupThirdComment               LikeGroupThirdComment[]
+  likeClassComment                    LikeClassComment[]
+  likeClassSubComment                 LikeClassSubComment[]
+  likeClassThirdComment               LikeClassThirdComment[]
+  likeClassCourseComment              LikeClassCourseComment[]
+  likeClassCourseSubComment           LikeClassCourseSubComment[]
+  likeClassCourseThirdComment         LikeClassCourseThirdComment[]
+  likeBootcampComment                 LikeBootcampComment[]
+  likeBootcampSubComment              LikeBootcampSubComment[]
+  likeBootcampThirdComment            LikeBootcampThirdComment[]
+  likeBootcampClassComment            LikeBootcampClassComment[]
+  likeBootcampClassSubComment         LikeBootcampClassSubComment[]
+  likeBootcampClassThirdComment       LikeBootcampClassThirdComment[]
+  likeBootcampClassCourseComment      LikeBootcampClassCourseComment[]
+  likeBootcampClassCourseSubComment   LikeBootcampClassCourseSubComment[]
+  likeBootcampClassCourseThirdComment LikeBootcampClassCourseThirdComment[]
+  bootcampMeetings                    BootcampMeetings[]
+  supports                            Support[]
+  bootcampClassSubscription           BootcampClassSubscription[]
+  bootcampCLassPricing                BootcampCLassPricing[]
+  bootcampCLassPayoutMethod           BootcampPayoutMethod[]
+  classSubscription                   CLassSubscription[]
+  CLassPricing                        CLassPricing[]
+  CLassPayoutMethod                   CLassPayoutMethod[]
+
+  @@index([email])
+}
+
+model Account {
+  id               String    @id @default(cuid())
+  userId           String    @unique @map("user_id")
+  type             String
+  provider         String
+  handle           String?   @unique
+  refresh_token    String?
+  access_token     String?
+  otp              String?
+  otpExpiration    DateTime?
+  tempPassword     String?
+  emailVerified    DateTime?
+  isVerified       Boolean   @default(false)
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  expires_at       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounts")
+}
+
+model DeleteActivities {
+  id              Int      @unique @default(autoincrement())
+  email           String   @unique
+  postsDeleted    Int?     @default(0)
+  accountDeleted  Int?     @default(0)
+  groupDeleted    Int?     @default(0)
+  classDeleted    Int?     @default(0)
+  bootCampDeleted Int?     @default(0)
+  academyDeleted  Int?     @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CreateActivities {
+  id             Int      @unique @default(autoincrement())
+  email          String   @unique
+  postsCreated   Int?     @default(0)
+  accountCreate  Int?     @default(0)
+  groupCreate    Int?     @default(0)
+  classDelete    Int?     @default(0)
+  bootCampDelete Int?     @default(0)
+  academyDelete  Int?     @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model GroupActivities {
+  id           Int      @unique @default(autoincrement())
+  groupId      String?
+  email        String   @unique
+  posts        Int?     @default(0)
+  videoCall    Int?     @default(0)
+  VoiceCall    Int?     @default(0)
+  chats        Int?     @default(0)
+  program      Int?     @default(0)
+  programVideo Int?     @default(0)
+  programVoice Int?     @default(0)
+  programChats Int?     @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ClassActivities {
+  id            Int      @unique @default(autoincrement())
+  classId       String?
+  email         String   @unique
+  posts         Int?     @default(0)
+  videoCall     Int?     @default(0)
+  VoiceCall     Int?     @default(0)
+  chats         Int?     @default(0)
+  lectures      Int?     @default(0)
+  lecturesVideo Int?     @default(0)
+  lecturesVoice Int?     @default(0)
+  lecturesChats Int?     @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model BootCampActivities {
+  id            Int          @unique @default(autoincrement())
+  classId       String?
+  email         String       @unique
+  posts         Int?         @default(0)
+  videoCall     Int?         @default(0)
+  VoiceCall     Int?         @default(0)
+  chats         Int?         @default(0)
+  lectures      Int?         @default(0)
+  lecturesVideo Int?         @default(0)
+  lecturesVoice Int?         @default(0)
+  lecturesChats Int?         @default(0)
+  level         BootCampEnum @default(BOOTCAMP)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Post {
+  id               String            @id @default(cuid())
+  userId           String
+  title            String
+  description      String
+  type             PostType
+  contentUrl       String?
+  thumbnailUrl     String?
+  resolutions      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  comment          Comment[]
+  like             Like[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rePost           RePost[]
+  videoResolutions VideoResolution[]
+}
+
+model Support {
+  id        String           @id @default(cuid())
+  roomId    String?
+  friendId  String?
+  userId    String?
+  content   String?
+  isRead    Boolean          @default(false)
+  type      ChatMessageType?
+  fileUrl   String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  friend    Profile?         @relation(fields: [friendId], references: [userId], onDelete: Cascade)
+}
+
+model Chats {
+  id        String           @id @default(cuid())
+  roomId    String?
+  friendId  String?
+  userId    String?
+  content   String?
+  isRead    Boolean          @default(false)
+  type      ChatMessageType?
+  fileUrl   String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  friend    Profile?         @relation(fields: [friendId], references: [userId], onDelete: Cascade)
+}
+
+model RePost {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VideoResolution {
+  id         String   @id @default(cuid())
+  postId     String // Foreign key to the Post model
+  resolution String // e.g., '240p', '360p', '480p'
+  url        String // S3 URL for this resolution
+  createdAt  DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Group {
+  id           String        @id @default(cuid())
+  name         String
+  purpose      String
+  rules        String
+  description  String
+  handle       String?       @unique
+  icon         String?
+  adminsCount  Int           @default(0)
+  membersCount Int           @default(0)
+  isSuspend    Boolean       @default(false)
+  isBlocked    Boolean       @default(false)
+  isMember     Boolean       @default(false)
+  isAdmin      Boolean       @default(false)
+  isChatsBlock Boolean       @default(false)
+  isPrivate    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdBy    String
+  creator      User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  admins       GroupAdmin[]
+  chats        GroupChat[]
+  members      GroupMember[]
+  mediaUploads MediaUpload[]
+  program      Program[]
+}
+
+model GroupAdmin {
+  id        String   @id @default(cuid())
+  userId    String
+  groupId   String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  userId    String
+  groupId   String
+  isAdmin   Boolean  @default(false)
+  isMember  Boolean  @default(false)
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isBlocked Boolean  @default(false)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+}
+
+model MediaUpload {
+  id           String           @id @default(cuid())
+  groupId      String
+  userId       String
+  title        String
+  description  String
+  type         MediaType
+  contentUrl   String?
+  thumbnailUrl String?
+  resolutions  String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  group        Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes        LikeGroupMedia[]
+  comments     GroupComment[]
+}
+
+model GroupComment {
+  id               String             @id @default(cuid())
+  userId           String
+  postId           String
+  content          String
+  type             PostType?
+  isDeleted        Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  post             MediaUpload        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likeGroupComment LikeGroupComment[]
+  groupSubComment  GroupSubComment[]
+}
+
+model GroupSubComment {
+  id                  String                @id @default(cuid())
+  userId              String
+  commentId           String
+  content             String
+  type                PostType?
+  isDeleted           Boolean               @default(false)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  likeGroupSubComment LikeGroupSubComment[]
+  groupThirdComment   GroupThirdComment[]
+  Comment             GroupComment          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GroupThirdComment {
+  id                    String                  @id @default(cuid())
+  userId                String
+  subCommentId          String
+  content               String
+  type                  PostType?
+  isDeleted             Boolean                 @default(false)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  likeGroupThirdComment LikeGroupThirdComment[]
+  subComment            GroupSubComment         @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeGroupMedia {
+  id        String      @id @default(cuid())
+  userId    String
+  mediaId   String
+  type      PostType?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  post      MediaUpload @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  User      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeGroupComment {
+  id        String       @id @default(cuid())
+  userId    String
+  commentId String
+  type      PostType?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  Comment   GroupComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeGroupSubComment {
+  id           String          @id @default(cuid())
+  userId       String
+  subCommentId String
+  type         PostType?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  subComment   GroupSubComment @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeGroupThirdComment {
+  id             String            @id @default(cuid())
+  userId         String
+  thirdCommentId String
+  type           PostType?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  thirdComment   GroupThirdComment @relation(fields: [thirdCommentId], references: [id], onDelete: Cascade)
+  User           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GroupChat {
+  id        String          @id @default(cuid())
+  groupId   String
+  userId    String
+  content   String?
+  type      ChatMessageType
+  fileUrl   String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  group     Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Program {
+  id               String   @id @default(cuid())
+  groupId          String
+  creatorId        String
+  title            String
+  type             String
+  participantLimit Int?
+  startDate        String
+  startTime        String
+  category         String
+  timeZone         String
+  description      String
+  link             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  creator          User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  group            Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model Class {
+  id                String              @id @default(cuid())
+  name              String
+  purpose           String
+  rules             String
+  description       String
+  icon              String?
+  handle            String?             @unique
+  instructorsCount  Int                 @default(1)
+  studentsCount     Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  isVerified        Boolean             @default(false)
+  isSuspended       Boolean             @default(false)
+  isBlocked         Boolean             @default(false)
+  isChatsBlock      Boolean             @default(false)
+  grade             Int                 @default(1)
+  createdBy         String
+  creator           User                @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  classAnnouncement ClassAnnouncement[]
+  chats             ClassChat[]
+  classContact      ClassContact[]
+  classFeedback     ClassFeedback[]
+  classMediaUploads ClassMediaUpload[]
+  course            Course[]
+  instructors       Instructor[]
+  lectures          Lecture[]
+  students          Student[]
+  classSubscription CLassSubscription[]
+  CLassEarning      CLassEarning[]
+  CLassPricing      CLassPricing[]
+  CLassPayoutMethod CLassPayoutMethod[]
+}
+
+model CLassSubscription {
+  id        String   @id @default(cuid())
+  classId   String
+  userId    String
+  type      String
+  amount    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+}
+
+model CLassEarning {
+  id        String   @id @default(cuid())
+  classId   String
+  balance   Int      @default(0)
+  payout    Int      @default(0)
+  Total     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+}
+
+model CLassPricing {
+  id          String   @id @default(cuid())
+  userId      String
+  classId     String
+  title       String
+  benefit1    String
+  benefit2    String
+  benefit3    String
+  benefit4    String
+  benefit5    String
+  type        String
+  amount      String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+}
+
+model CLassPayoutMethod {
+  id                String   @id @default(cuid())
+  userId            String
+  classId           String
+  country           String?
+  currency          String?
+  city              String?
+  email             String?
+  fullName          String?
+  bankName          String?
+  bankAccountNumber String?
+  bankAddress       String?
+  swiftOrBic        String?
+  iBan              String?
+  routingNumber     String?
+  phoneNumber       String?
+  description       String?
+  accountType       String?
+  postalCode        String?
+  type              String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class             Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+}
+
+model ClassAnnouncement {
+  id        String   @id @default(cuid())
+  classId   String
+  userId    String
+  title     String
+  startDate DateTime
+  endDate   DateTime
+  statement String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClassFeedback {
+  id        String   @id @default(cuid())
+  classId   String
+  userId    String
+  name      String
+  reason    String
+  statement String
+  rating    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClassContact {
+  id        String   @id @default(cuid())
+  classId   String
+  userId    String
+  name      String
+  email     String
+  reason    String
+  statement String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Instructor {
+  id           String   @id @default(cuid())
+  userId       String
+  classId      String
+  isInstructor Boolean  @default(false)
+  isSuspended  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  class        Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+}
+
+model Student {
+  id          String   @id @default(cuid())
+  userId      String
+  classId     String
+  planType    String
+  amount      Int      @default(0)
+  joinedAt    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isBlocked   Boolean  @default(false)
+  isStudent   Boolean  @default(false)
+  isSuspended Boolean  @default(false)
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+}
+
+model ClassMediaUpload {
+  id           String           @id @default(cuid())
+  classId      String
+  userId       String
+  title        String
+  description  String
+  type         MediaType
+  contentUrl   String?
+  thumbnailUrl String?
+  resolutions  String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  class        Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes        LikeClassMedia[]
+  comments     ClassComment[]
+}
+
+model ClassComment {
+  id          String             @id @default(cuid())
+  userId      String
+  postId      String
+  content     String
+  type        PostType?
+  isDeleted   Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  post        ClassMediaUpload   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likeComment LikeClassComment[]
+  subComment  ClassSubComment[]
+}
+
+model ClassSubComment {
+  id             String                @id @default(cuid())
+  userId         String
+  commentId      String
+  content        String
+  type           PostType?
+  isDeleted      Boolean               @default(false)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  LikeSubComment LikeClassSubComment[]
+  thirdComment   ClassThirdComment[]
+  Comment        ClassComment          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClassThirdComment {
+  id               String                  @id @default(cuid())
+  userId           String
+  subCommentId     String
+  content          String
+  type             PostType?
+  isDeleted        Boolean                 @default(false)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  LikeThirdComment LikeClassThirdComment[]
+  subComment       ClassSubComment         @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User             User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeClassComment {
+  id        String       @id @default(cuid())
+  userId    String
+  commentId String
+  type      PostType?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  Comment   ClassComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeClassSubComment {
+  id           String          @id @default(cuid())
+  userId       String
+  subCommentId String
+  type         PostType?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  subComment   ClassSubComment @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeClassThirdComment {
+  id             String            @id @default(cuid())
+  userId         String
+  thirdCommentId String
+  type           PostType?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  thirdComment   ClassThirdComment @relation(fields: [thirdCommentId], references: [id], onDelete: Cascade)
+  User           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeClassMedia {
+  id        String           @id @default(cuid())
+  userId    String
+  mediaId   String
+  type      PostType?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  post      ClassMediaUpload @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  User      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClassChat {
+  id        String          @id @default(cuid())
+  classId   String
+  userId    String
+  content   String?
+  type      ChatMessageType
+  fileUrl   String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  class     Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Lecture {
+  id               String   @id @default(cuid())
+  classId          String
+  creatorId        String
+  title            String
+  type             String
+  participantLimit Int?
+  startDate        String
+  startTime        String
+  category         String
+  timeZone         String
+  description      String
+  link             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  class            Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  creator          User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id           String          @id @default(cuid())
+  classId      String
+  instructorId String
+  title        String
+  description  String
+  thumbnailUrl String
+  category     String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  class        Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  instructor   User            @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  sections     CourseSection[]
+}
+
+model CourseSection {
+  id           String        @id @default(cuid())
+  courseId     String
+  instructorId String
+  title        String
+  category     String
+  description  String
+  thumbnailUrl String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  media        CourseMedia[]
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor   User          @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+}
+
+model CourseMedia {
+  id           String                 @id @default(cuid())
+  sectionId    String
+  instructorId String
+  title        String
+  type         MediaTypeCourse?
+  url          String
+  resolutions  String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  instructor   User                   @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  section      CourseSection          @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  likes        LikeClassCourseVideo[]
+  comments     ClassCourseComment[]
+}
+
+model ClassCourseComment {
+  id          String                   @id @default(cuid())
+  userId      String
+  postId      String
+  content     String
+  type        MediaTypeCourse?
+  isDeleted   Boolean                  @default(false)
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  post        CourseMedia              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User        User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likeComment LikeClassCourseComment[]
+  subComment  ClassCourseSubComment[]
+}
+
+model ClassCourseSubComment {
+  id             String                      @id @default(cuid())
+  userId         String
+  commentId      String
+  content        String
+  type           MediaTypeCourse?
+  isDeleted      Boolean                     @default(false)
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+  LikeSubComment LikeClassCourseSubComment[]
+  thirdComment   ClassCourseThirdComment[]
+  Comment        ClassCourseComment          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User           User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClassCourseThirdComment {
+  id               String                        @id @default(cuid())
+  userId           String
+  subCommentId     String
+  content          String
+  type             MediaTypeCourse?
+  isDeleted        Boolean                       @default(false)
+  createdAt        DateTime                      @default(now())
+  updatedAt        DateTime                      @updatedAt
+  LikeThirdComment LikeClassCourseThirdComment[]
+  subComment       ClassCourseSubComment         @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User             User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeClassCourseComment {
+  id        String             @id @default(cuid())
+  userId    String
+  commentId String
+  type      MediaTypeCourse?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  Comment   ClassCourseComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeClassCourseSubComment {
+  id           String                @id @default(cuid())
+  userId       String
+  subCommentId String
+  type         MediaTypeCourse?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  subComment   ClassCourseSubComment @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeClassCourseThirdComment {
+  id             String                  @id @default(cuid())
+  userId         String
+  thirdCommentId String
+  type           MediaTypeCourse?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  thirdComment   ClassCourseThirdComment @relation(fields: [thirdCommentId], references: [id], onDelete: Cascade)
+  User           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeClassCourseVideo {
+  id        String           @id @default(cuid())
+  userId    String
+  mediaId   String
+  type      MediaTypeCourse?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  post      CourseMedia      @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  User      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Bootcamp {
+  id                        String                      @id @default(cuid())
+  name                      String
+  purpose                   String
+  country                   String
+  language                  String
+  rules                     String
+  description               String
+  icon                      String?
+  handle                    String?                     @unique
+  isBlocked                 Boolean                     @default(false)
+  isVerified                Boolean                     @default(false)
+  isSuspended               Boolean                     @default(false)
+  grade                     Int                         @default(1)
+  creatorId                 String
+  instructorsCount          Int                         @default(1)
+  studentsCount             Int                         @default(0)
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  creator                   User                        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  bootcampAnnouncement      BootcampAnnouncement[]
+  classes                   BootcampClass[]
+  bootcampContact           BootcampContact[]
+  bootcampFeedback          BootcampFeedback[]
+  bootcampMediaUpload       BootcampMediaUpload[]
+  bootcampMeetings          BootcampMeetings[]
+  bootcampSubscription      BootcampClassSubscription[]
+  bootcampCLassEarning      BootcampCLassEarning[]
+  bootcampCLassPricing      BootcampCLassPricing[]
+  bootcampCLassPayoutMethod BootcampPayoutMethod[]
+}
+
+model BootcampMeetings {
+  id               String   @id @default(cuid())
+  bootcampId       String
+  creatorId        String
+  title            String
+  type             String
+  participantLimit Int?
+  startDate        String
+  startTime        String
+  category         String
+  timeZone         String
+  description      String
+  link             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  bootcamp         Bootcamp @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  creator          User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model BootcampAnnouncement {
+  id         String   @id @default(cuid())
+  bootcampId String
+  userId     String
+  title      String
+  startDate  DateTime
+  endDate    DateTime
+  statement  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  bootcamp   Bootcamp @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampMediaUpload {
+  id           String              @id @default(cuid())
+  bootcampId   String
+  userId       String
+  title        String
+  description  String
+  type         MediaType
+  contentUrl   String?
+  thumbnailUrl String?
+  resolutions  String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  bootcamp     Bootcamp            @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes        LikeBootcampMedia[]
+  comments     BootcampComment[]
+}
+
+model BootcampComment {
+  id          String                @id @default(cuid())
+  userId      String
+  postId      String
+  content     String
+  type        MediaType?
+  isDeleted   Boolean               @default(false)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  post        BootcampMediaUpload   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likeComment LikeBootcampComment[]
+  subComment  BootcampSubComment[]
+}
+
+model BootcampSubComment {
+  id             String                   @id @default(cuid())
+  userId         String
+  commentId      String
+  content        String
+  type           MediaType?
+  isDeleted      Boolean                  @default(false)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  LikeSubComment LikeBootcampSubComment[]
+  thirdComment   BootcampThirdComment[]
+  Comment        BootcampComment          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User           User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampThirdComment {
+  id               String                     @id @default(cuid())
+  userId           String
+  subCommentId     String
+  content          String
+  type             MediaType?
+  isDeleted        Boolean                    @default(false)
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  LikeThirdComment LikeBootcampThirdComment[]
+  subComment       BootcampSubComment         @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User             User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampComment {
+  id        String          @id @default(cuid())
+  userId    String
+  commentId String
+  type      MediaType?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  Comment   BootcampComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampSubComment {
+  id           String             @id @default(cuid())
+  userId       String
+  subCommentId String
+  type         MediaType?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  subComment   BootcampSubComment @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampThirdComment {
+  id             String               @id @default(cuid())
+  userId         String
+  thirdCommentId String
+  type           MediaType?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  thirdComment   BootcampThirdComment @relation(fields: [thirdCommentId], references: [id], onDelete: Cascade)
+  User           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampMedia {
+  id        String              @id @default(cuid())
+  userId    String
+  mediaId   String
+  type      MediaType?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  post      BootcampMediaUpload @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  User      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampContact {
+  id         String   @id @default(cuid())
+  bootcampId String
+  userId     String
+  name       String
+  email      String
+  reason     String
+  statement  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  bootcamp   Bootcamp @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampFeedback {
+  id         String   @id @default(cuid())
+  bootcampId String
+  userId     String
+  name       String
+  reason     String
+  statement  String
+  rating     Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  bootcamp   Bootcamp @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClass {
+  id                        String                      @id @default(cuid())
+  name                      String
+  purpose                   String
+  rules                     String
+  description               String
+  icon                      String?
+  handle                    String?                     @unique
+  instructorsCount          Int                         @default(1)
+  studentsCount             Int                         @default(0)
+  isVerified                Boolean                     @default(false)
+  isSuspended               Boolean                     @default(false)
+  isBlocked                 Boolean                     @default(false)
+  isChatsBlock              Boolean                     @default(false)
+  grade                     Int                         @default(1)
+  bootcampId                String
+  level                     ClassLevel
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  createdBy                 String
+  bootcamp                  Bootcamp                    @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  creator                   User                        @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  bootcampClassAnnouncement BootcampClassAnnouncement[]
+  chats                     BootcampClassChat[]
+  bootcampClassContact      BootcampClassContact[]
+  bootcampClassFeedback     BootcampClassFeedback[]
+  classMediaUploads         BootcampClassMediaUpload[]
+  course                    BootcampCourse[]
+  instructors               BootcampInstructor[]
+  lectures                  BootcampLecture[]
+  students                  BootcampStudent[]
+  bootcampSubscription      BootcampClassSubscription[]
+  bootcampCLassEarning      BootcampCLassEarning[]
+  bootcampCLassPricing      BootcampCLassPricing[]
+
+  @@index([bootcampId])
+  @@index([createdBy])
+}
+
+model BootcampClassSubscription {
+  id         String        @id @default(cuid())
+  bootcampId String
+  classId    String
+  userId     String
+  type       String
+  amount     Int           @default(0)
+  level      ClassLevel
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class      BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  bootcamp   Bootcamp      @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+}
+
+model BootcampCLassEarning {
+  id         String        @id @default(cuid())
+  bootcampId String
+  classId    String
+  balance    Int           @default(0)
+  payout     Int           @default(0)
+  Total      Int           @default(0)
+  level      ClassLevel
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  class      BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  bootcamp   Bootcamp      @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+}
+
+model BootcampCLassPricing {
+  id          String        @id @default(cuid())
+  userId      String
+  classId     String
+  bootcampId  String
+  title       String
+  benefit1    String
+  benefit2    String
+  benefit3    String
+  benefit4    String
+  benefit5    String
+  type        String
+  amount      String
+  description String
+  level       ClassLevel
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class       BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  bootcamp    Bootcamp      @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+}
+
+model BootcampPayoutMethod {
+  id                String   @id @default(cuid())
+  userId            String
+  bootcampId        String
+  country           String?
+  currency          String?
+  city              String?
+  email             String?
+  fullName          String?
+  bankName          String?
+  bankAccountNumber String?
+  bankAddress       String?
+  swiftOrBic        String?
+  iBan              String?
+  routingNumber     String?
+  phoneNumber       String?
+  description       String?
+  accountType       String?
+  postalCode        String?
+  type              String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bootcamp          Bootcamp @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClassAnnouncement {
+  id        String        @id @default(cuid())
+  classId   String
+  userId    String
+  title     String
+  startDate DateTime
+  endDate   DateTime
+  level     ClassLevel
+  statement String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  class     BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClassFeedback {
+  id        String        @id @default(cuid())
+  classId   String
+  level     ClassLevel
+  userId    String
+  name      String
+  reason    String
+  statement String
+  rating    String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  class     BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClassContact {
+  id        String        @id @default(cuid())
+  classId   String
+  level     ClassLevel
+  userId    String
+  name      String
+  email     String
+  reason    String
+  statement String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  class     BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampInstructor {
+  id           String        @id @default(cuid())
+  userId       String
+  classId      String
+  isInstructor Boolean       @default(false)
+  isSuspended  Boolean       @default(false)
+  level        ClassLevel
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  class        BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+}
+
+model BootcampStudent {
+  id          String        @id @default(cuid())
+  userId      String
+  classId     String
+  planType    String
+  amount      Int           @default(0)
+  isBlocked   Boolean       @default(false)
+  isStudent   Boolean       @default(false)
+  isSuspended Boolean       @default(false)
+  level       ClassLevel
+  joinedAt    DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  class       BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+}
+
+model BootcampClassMediaUpload {
+  id           String                   @id @default(cuid())
+  classId      String
+  userId       String
+  title        String
+  description  String
+  type         MediaType
+  contentUrl   String?
+  thumbnailUrl String?
+  level        ClassLevel
+  resolutions  String?
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  class        BootcampClass            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user         User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes        LikeBootcampClassMedia[]
+  comment      BootcampClassComment[]
+}
+
+model BootcampClassComment {
+  id          String                     @id @default(cuid())
+  userId      String
+  postId      String
+  content     String
+  type        MediaType?
+  isDeleted   Boolean                    @default(false)
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  post        BootcampClassMediaUpload   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User        User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likeComment LikeBootcampClassComment[]
+  subComment  BootcampClassSubComment[]
+}
+
+model BootcampClassSubComment {
+  id             String                        @id @default(cuid())
+  userId         String
+  commentId      String
+  content        String
+  type           MediaType?
+  isDeleted      Boolean                       @default(false)
+  createdAt      DateTime                      @default(now())
+  updatedAt      DateTime                      @updatedAt
+  LikeSubComment LikeBootcampClassSubComment[]
+  thirdComment   BootcampClassThirdComment[]
+  Comment        BootcampClassComment          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User           User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClassThirdComment {
+  id               String                          @id @default(cuid())
+  userId           String
+  subCommentId     String
+  content          String
+  type             MediaType?
+  isDeleted        Boolean                         @default(false)
+  createdAt        DateTime                        @default(now())
+  updatedAt        DateTime                        @updatedAt
+  LikeThirdComment LikeBootcampClassThirdComment[]
+  subComment       BootcampClassSubComment         @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User             User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampClassComment {
+  id        String               @id @default(cuid())
+  userId    String
+  commentId String
+  type      MediaType?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  Comment   BootcampClassComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampClassSubComment {
+  id           String                  @id @default(cuid())
+  userId       String
+  subCommentId String
+  type         MediaType?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  subComment   BootcampClassSubComment @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampClassThirdComment {
+  id             String                    @id @default(cuid())
+  userId         String
+  thirdCommentId String
+  type           MediaType?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+  thirdComment   BootcampClassThirdComment @relation(fields: [thirdCommentId], references: [id], onDelete: Cascade)
+  User           User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampClassMedia {
+  id        String                   @id @default(cuid())
+  userId    String
+  mediaId   String
+  type      MediaType?
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+  post      BootcampClassMediaUpload @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  User      User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClassChat {
+  id        String          @id @default(cuid())
+  classId   String
+  userId    String
+  content   String?
+  type      ChatMessageType
+  fileUrl   String?
+  level     ClassLevel
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  class     BootcampClass   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampLecture {
+  id               String        @id @default(cuid())
+  classId          String
+  creatorId        String
+  title            String
+  type             String
+  participantLimit Int?
+  startDate        String
+  startTime        String
+  category         String
+  timeZone         String
+  description      String
+  link             String?
+  level            ClassLevel
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  class            BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  creator          User          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model BootcampCourse {
+  id           String                  @id @default(cuid())
+  classId      String
+  instructorId String
+  title        String
+  description  String
+  thumbnailUrl String
+  category     String
+  level        ClassLevel
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  class        BootcampClass           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  instructor   User                    @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  sections     BootcampCourseSection[]
+}
+
+model BootcampCourseSection {
+  id           String                @id @default(cuid())
+  courseId     String
+  instructorId String
+  title        String
+  category     String
+  description  String
+  thumbnailUrl String
+  level        ClassLevel
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  course       BootcampCourse        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor   User                  @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  media        BootcampCourseVideo[]
+}
+
+model BootcampCourseVideo {
+  id           String                       @id @default(cuid())
+  sectionId    String
+  instructorId String
+  title        String
+  url          String
+  type         MediaTypeCourse
+  level        ClassLevel
+  resolutions  String?
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+  instructor   User                         @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+  section      BootcampCourseSection        @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  likes        LikeBootcampCourseVideo[]
+  comments     BootcampClassCourseComment[]
+}
+
+model LikeBootcampCourseVideo {
+  id        String              @id @default(cuid())
+  userId    String
+  mediaId   String
+  type      MediaTypeCourse?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  post      BootcampCourseVideo @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  User      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClassCourseComment {
+  id          String                           @id @default(cuid())
+  userId      String
+  postId      String
+  content     String
+  type        MediaTypeCourse?
+  isDeleted   Boolean                          @default(false)
+  createdAt   DateTime                         @default(now())
+  updatedAt   DateTime                         @updatedAt
+  post        BootcampCourseVideo              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User        User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likeComment LikeBootcampClassCourseComment[]
+  subComment  BootcampClassCourseSubComment[]
+}
+
+model BootcampClassCourseSubComment {
+  id             String                              @id @default(cuid())
+  userId         String
+  commentId      String
+  content        String
+  type           MediaTypeCourse?
+  isDeleted      Boolean                             @default(false)
+  createdAt      DateTime                            @default(now())
+  updatedAt      DateTime                            @updatedAt
+  LikeSubComment LikeBootcampClassCourseSubComment[]
+  thirdComment   BootcampClassCourseThirdComment[]
+  Comment        BootcampClassCourseComment          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User           User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClassCourseThirdComment {
+  id               String                                @id @default(cuid())
+  userId           String
+  subCommentId     String
+  content          String
+  type             MediaTypeCourse?
+  isDeleted        Boolean                               @default(false)
+  createdAt        DateTime                              @default(now())
+  updatedAt        DateTime                              @updatedAt
+  LikeThirdComment LikeBootcampClassCourseThirdComment[]
+  subComment       BootcampClassCourseSubComment         @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User             User                                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampClassCourseComment {
+  id        String                     @id @default(cuid())
+  userId    String
+  commentId String
+  type      MediaTypeCourse?
+  createdAt DateTime                   @default(now())
+  updatedAt DateTime                   @updatedAt
+  Comment   BootcampClassCourseComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User      User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampClassCourseSubComment {
+  id           String                        @id @default(cuid())
+  userId       String
+  subCommentId String
+  type         MediaTypeCourse?
+  createdAt    DateTime                      @default(now())
+  updatedAt    DateTime                      @updatedAt
+  subComment   BootcampClassCourseSubComment @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User         User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeBootcampClassCourseThirdComment {
+  id             String                          @id @default(cuid())
+  userId         String
+  thirdCommentId String
+  type           MediaTypeCourse?
+  createdAt      DateTime                        @default(now())
+  updatedAt      DateTime                        @updatedAt
+  thirdComment   BootcampClassCourseThirdComment @relation(fields: [thirdCommentId], references: [id], onDelete: Cascade)
+  User           User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id          String        @id @default(cuid())
+  userId      String
+  postId      String
+  content     String
+  isDeleted   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  post        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likeComment LikeComment[]
+  subComment  SubComment[]
+}
+
+model SubComment {
+  id             String           @id @default(cuid())
+  userId         String
+  commentId      String
+  content        String
+  isDeleted      Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  LikeSubComment LikeSubComment[]
+  thirdComment   ThirdComment[]
+  Comment        Comment          @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ThirdComment {
+  id               String             @id @default(cuid())
+  userId           String
+  subCommentId     String
+  content          String
+  isDeleted        Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  LikeThirdComment LikeThirdComment[]
+  subComment       SubComment         @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeComment {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeSubComment {
+  id           String     @id @default(cuid())
+  userId       String
+  subCommentId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  subComment   SubComment @relation(fields: [subCommentId], references: [id], onDelete: Cascade)
+  User         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LikeThirdComment {
+  id             String       @id @default(cuid())
+  userId         String
+  thirdCommentId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  thirdComment   ThirdComment @relation(fields: [thirdCommentId], references: [id], onDelete: Cascade)
+  User           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Profile {
+  id        String      @id @default(cuid())
+  userId    String      @unique
+  photoUrl  String?
+  bannerUrl String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  followers Follower[]
+  following Following[]
+  chats     Chats[]
+  supports  Support[]
+  User      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  reason    String
+  statement String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  name      String
+  reason    String
+  statement String
+  rating    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Follower {
+  id               String   @id @default(cuid())
+  followerId       String
+  followingId      String
+  isBlocked        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  User             User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
+  FollowingProfile Profile  @relation(fields: [followingId], references: [userId], onDelete: Cascade)
+}
+
+model Following {
+  id               String   @id @default(cuid())
+  followerId       String
+  followingId      String
+  isBlocked        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  User             User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
+  FollowingProfile Profile  @relation(fields: [followingId], references: [userId], onDelete: Cascade)
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  fullName  String
+  email     String   @unique
+  country   String
+  state     String
+  area      String
+  address   String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isAdmin   Boolean  @default(false)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Employee {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  fullName   String
+  email      String   @unique
+  country    String
+  state      String
+  area       String
+  address    String?
+  password   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  access     Json
+  isEmployee Boolean  @default(false)
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum PostType {
+  VIDEO
+  IMAGE
+  TEXT
+}
+
+enum ClassLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum BootCampEnum {
+  BOOTCAMP
+  ACADEMY
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum AcademyClassLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum MediaTypeCourse {
+  VIDEO
+  PDF
+  IMAGE
+}
+
+enum MediaType {
+  SHORT_VIDEO
+  NORMAL_VIDEO
+  IMAGE
+  AUDIO
+  DOCUMENT
+  VIDEO
+  TEXT
+  RECORDING
+}
+
+enum ChatMessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  RECORDING
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+enum UserRole {
+  ADMIN
+  EMPLOYE
+  USER
+}
