@@ -57,7 +57,6 @@ class ClassMemberService {
     try {
       return prisma.bootcampStudent.findMany({
         where: { classId, level:'BEGINNER', isSuspended: false },
-
         include: {
           user: {
             include: {

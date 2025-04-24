@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import argon2 from 'argon2';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../utils/prisma';
 import { SES, SendEmailCommandInput } from '@aws-sdk/client-ses';
 import validator from 'validator';
 import dotenv from 'dotenv';
@@ -8,53 +8,51 @@ import dotenv from 'dotenv';
 dotenv.config();
 dotenv.config({ path: '../../../../../backend/.env' });
 
-const MY_S3_ACCESS_KEY = process.env.MY_S3_ACCESS_KEY!;
-const MY_S3_SECRET_KEY = process.env.MY_S3_ACCESS_KEY!;
+import { Resend } from 'resend';
 
-const MY_S3_REGION = 'us-east-1'
-const AUTH_EMAIL="infobeatlive@gmail.com"
+const resend = new Resend(process.env.RESEND_API_KEY!); 
 
-const prisma = new PrismaClient();
 const resetPasswordRouter = express.Router();
 
-const ses = new SES({
-  credentials: {
-    accessKeyId:MY_S3_ACCESS_KEY,
-    secretAccessKey:MY_S3_SECRET_KEY,
-  },
-  region:MY_S3_REGION,
-});
-
-async function sendSESOtp(email: string, otp: number): Promise<void> {
-  const params: SendEmailCommandInput = {
-    Destination: {
-      ToAddresses: [email],
-    },
-    Message: {
-      Body: {
-        Text: {
-          Data: `Dear our lovely and valuable user,
-
-          Your One-Time Password (OTP) is: ${otp}. This code is valid for 60 seconds.
-
-          Please use this OTP to update your password on advertConnectPro.
-
-          Note: Do not share this OTP with anyone for security reasons. If you did not request this OTP, please ignore this message.`,
-        },
-      },
-      Subject: {
-        Data: 'Your OTP for updating password on advertConnectPro',
-      },
-    },
-    Source:AUTH_EMAIL,
-  };
-
+async function sendResendOtp(email: string, otp: number): Promise<void> {
   try {
-    await ses.sendEmail(params);
-    console.log(`Email sent to ${email}: ${otp}`);
+    await resend.emails.send({
+      from: 'noreply@infobeatlive.com',
+      to: email,
+      subject: 'Your One-Time Password (OTP)',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+          <h2 style="color: #333;">Hello,</h2>
+          <p style="font-size: 16px; color: #555;">
+            We received a request for updating your <strong>Infobeatlive</strong> account password.
+          </p>
+          <p style="font-size: 18px; color: #000;">
+            <strong>Your OTP code is:</strong>
+          </p>
+          <div style="font-size: 28px; font-weight: bold; color: #2d7ff9; margin: 16px 0;">
+            ${otp}
+          </div>
+          <p style="font-size: 15px; color: #555;">
+            This code is valid for the next <strong>60 seconds</strong>. 
+            Please use  it  to update  your password.
+          </p>
+          <hr style="margin: 24px 0;" />
+          <p style="font-size: 13px; color: #888;">
+            If you did not initiate this request, you can safely ignore this message. 
+            Do not share this OTP with anyone for security reasons.
+          </p>
+          <p style="font-size: 13px; color: #888;">
+            Best Regards,<br/>
+            The Infobeatlive Auth Team
+          </p>
+        </div>
+      `,
+    });
+
+    console.log(`Resend: OTP email sent to ${email}`);
   } catch (error) {
-    console.error('SES email error:', error);
-    throw new Error('Failed to send email OTP');
+    console.error('Resend email error:', error);
+    throw new Error('Failed to send OTP via Resend');
   }
 }
 
@@ -107,8 +105,7 @@ resetPasswordRouter.post('/update-password', async (req: Request, res: Response)
       },
     });
 
-    // Send OTP to user's email
-    await sendSESOtp(email, resetOtp);
+    await sendResendOtp(email, resetOtp);
 
     return res.status(200).json({ message: 'Reset OTP sent to your email.' });
   } catch (error) {

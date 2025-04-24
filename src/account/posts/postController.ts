@@ -1,4 +1,4 @@
-import prisma from './prisma';
+import prisma from '../../utils/prisma';
 import { processImage } from './sharp';
 import { processVideo } from './ffmpeg';
 import { uploadToS3, deleteFromS3 } from './s3Upload';
@@ -38,10 +38,10 @@ export const createPost = async (req: Request, res: Response) => {
     for (let file of files) {
       if (type === 'IMAGE') {
         io.to(roomId).emit('post-upload-progress', { progress: 20 });
-        const processedImage = await processImage(file.buffer);
+        // const processedImage = await processImage(file.buffer);
         io.to(roomId).emit('post-upload-progress', { progress: 40 });
         const key = `images/${userId}/image/${uniqueFilename}/${Date.now()}-${file.originalname}`;
-        const contentUrl = await uploadToS3(processedImage, key, 'image/jpeg');
+        const contentUrl = await uploadToS3(file.buffer, key, file.mimetype);
         io.to(roomId).emit('post-upload-progress', { progress: 70 });
         imageUrls.push(contentUrl);
       }else if (type === 'VIDEO' && file) {
@@ -117,11 +117,11 @@ export const createPost1 = async (req: Request, res: Response) => {
 
     if (type === 'IMAGE' && file) {
       io.to(roomId).emit('post-upload-progress', { progress: 20 });
-      const processedImage = await processImage(file.buffer);
+      //const processedImage = await processImage(file.buffer);
       io.to(roomId).emit('post-upload-progress', { progress: 40 });
       const key = `images/${userId}/image/${uniqueFilename}/${Date.now()}-${file.originalname}`;
       io.to(roomId).emit('post-upload-progress', { progress: 50 });
-      contentUrl = await uploadToS3(processedImage, key, 'image/jpeg');
+      contentUrl = await uploadToS3(file.buffer, key, file.mimetype);
       io.to(roomId).emit('post-upload-progress', { progress: 70 });
     } else if (type === 'VIDEO' && file) {
       io.to(roomId).emit('post-upload-progress', { progress: 20 });

@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import argon2 from 'argon2';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../utils/prisma';
 import { SES } from '@aws-sdk/client-ses';
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
@@ -8,55 +8,52 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MY_S3_ACCESS_KEY = process.env.MY_S3_ACCESS_KEY!;
-const MY_S3_SECRET_KEY = process.env.MY_S3_ACCESS_KEY!;
+import { Resend } from 'resend';
 
-const MY_S3_REGION = 'us-east-1'
-const AUTH_EMAIL="infobeatlive@gmail.com"
+const resend = new Resend(process.env.RESEND_API_KEY!); 
 
-const prisma = new PrismaClient();
 const registerRoutes = express.Router();
 
-const ses = new SES({
-  credentials: {
-    accessKeyId:MY_S3_ACCESS_KEY,
-    secretAccessKey:MY_S3_SECRET_KEY,
-  },
-  region:MY_S3_REGION,
-});
 
-async function sendSESOtp(email: string, otp: number): Promise<void> {
-  const params = {
-    Destination: {
-      ToAddresses: [email],
-    },
-    Message: {
-      Body: {
-        Text: {
-          Data: `Dear our lovely and valuable user,
 
-                 Your One-Time Password (OTP) is: ${otp}. This code is valid for 60 seconds.
-          
-                 Please use this OTP to complete your registration on advertConnectPro.com.
-          
-                 Note: Do not share this OTP with anyone for security reasons. If you did not request
-
-                 this OTP, please ignore this message.`,
-        },
-      },
-      Subject: {
-        Data: 'Your OTP for sign-up to advertConnectPro.com',
-      },
-    },
-    Source:AUTH_EMAIL,
-  };
-
+async function sendResendOtp(email: string, otp: number): Promise<void> {
   try {
-    await ses.sendEmail(params);
-    console.log(`Email sent to ${email}: ${otp}`);
+    await resend.emails.send({
+      from: 'noreply@infobeatlive.com',
+      to: email,
+      subject: 'Your One-Time Password (OTP)',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f9f9f9;">
+          <h2 style="color: #333;">Hello,</h2>
+          <p style="font-size: 16px; color: #555;">
+            We received a request for creating new <strong>Infobeatlive</strong> account.
+          </p>
+          <p style="font-size: 18px; color: #000;">
+            <strong>Your OTP code is:</strong>
+          </p>
+          <div style="font-size: 28px; font-weight: bold; color: #2d7ff9; margin: 16px 0;">
+            ${otp}
+          </div>
+          <p style="font-size: 15px; color: #555;">
+            This code is valid for the next <strong>60 seconds</strong>. Please use  it  to complete your registration.
+          </p>
+          <hr style="margin: 24px 0;" />
+          <p style="font-size: 13px; color: #888;">
+            If you did not initiate this request, you can safely ignore this message. Do not share this 
+            OTP with anyone for security reasons.
+          </p>
+          <p style="font-size: 13px; color: #888;">
+            Best Regards,<br/>
+            The Infobeatlive Auth Team
+          </p>
+        </div>
+      `,
+    });
+
+    console.log(`Resend: OTP email sent to ${email}`);
   } catch (error) {
-    console.error('SES email error:', error);
-    throw new Error('Failed to send email OTP');
+    console.error('Resend email error:', error);
+    throw new Error('Failed to send OTP via Resend');
   }
 }
 
@@ -139,7 +136,7 @@ registerRoutes.post('/register', async (req: Request, res: Response) => {
           },
         });
 
-        await sendSESOtp(email, otp);
+        await sendResendOtp(email, otp);
 
         return res.status(201).json({ message: 'User updated and OTP sent' });
       }
@@ -191,7 +188,7 @@ registerRoutes.post('/register', async (req: Request, res: Response) => {
        await prisma.classActivities.create({ data:{  email:email,},  });
        await prisma.bootCampActivities.create({ data:{  email:email,  }, });
       
-      await sendSESOtp(email, otp);
+       await sendResendOtp(email, otp);
 
       return res.status(201).json({
       message: 'User registered successfully. Please verify your email.',

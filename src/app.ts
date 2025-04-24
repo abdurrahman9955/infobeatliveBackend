@@ -1,15 +1,13 @@
-// src/server.ts
+// src/app.ts
 import express from 'express';
 import { createServer, ServerOptions } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { PrismaClient } from '@prisma/client';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import cors from 'cors';
 import session from 'express-session';
 import dotenv from 'dotenv';
-import classSocketConnection from './socket/class';
 
 dotenv.config();
 
@@ -63,6 +61,7 @@ import likeClassCourseThirdComments from './class/course/mediaActions/likeThirdC
 import classLectureRouter from './class/lecture/router';
 import classPayoutRouter from './class/payoutMethods/router';
 import classPricingRouter from './class/pricing/router';
+import classVerifyRouter from './class/verifyClass/router';
 
 import createBootcampRouter from './bootcamp/createBootCamp/bootCampMain';
 import bootcampContactRouter from './bootcamp/contact/contactRoute';
@@ -175,7 +174,7 @@ import bootcampAdvanceClassCourseLikes from './bootcamp/advance_class/course/med
 import likeBootcampAdvanceClassCourseComments from './bootcamp/advance_class/course/mediaActions/likeComment/likeComments';
 import likeBootcampAdvanceClassCourseSubComments from './bootcamp/advance_class/course/mediaActions/likeSubComment/likeSubComments';
 import likeBootcampAdvanceClassCourseThirdComments from './bootcamp/advance_class/course/mediaActions/likeThirdComment/likeThirdComment';
-
+import bootcampVerifyRouter from './bootcamp/verifyBootCamp/router';
 
 import registerRoutes from './account/auth/register/route';
 import loginRoutes from './account/auth/login/route';
@@ -205,18 +204,25 @@ import likeComments from './account/likeComment/likeComments';
 import likeSubComments from './account/likeSubComment/likeSubComments';
 import likeThirdComments from './account/likeThirdComment/likeThirdComment';
 import userSupportChatRouter from './account/support/router';
-import { createAdapter } from '@socket.io/redis-adapter';
-import { createClient } from 'redis';
+import googleRouter from './account/auth/googleAuth/google';
+import routerHealth from './health/health';
+import prisma from './utils/prisma';
+//import { createAdapter } from '@socket.io/redis-adapter';
+//import { createClient } from 'redis';
+//import {RedisStore} from "connect-redis"
 
 const app = express();
-
-const prisma = new PrismaClient();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin','https://infobeatlive.com');
+  const origin = req.headers.origin;
+  if (origin === 'https://www.infobeatlive.com' || origin === 'https://infobeatlive.com') {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
   res.setHeader('Access-Control-Allow-Methods', '*');
   res.setHeader('Access-Control-Allow-Headers', '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -228,25 +234,41 @@ app.use((req, res, next) => {
   }
 });
 
+
 // Logging and cookie parsing
 app.use(morgan('combined'));
 app.use(cookieParser());
 
-// Session and authentication
+// const redisHost = '54.89.80.108';  
+
+// const pubClient = createClient({ url:`redis://${redisHost}:6379` });
+// const subClient = pubClient.duplicate();
+
+// const redisClient = createClient({ url:`redis://${redisHost}:6379`});
+// redisClient.connect().catch(console.error);
+
+// const sessionStore = new RedisStore({
+//   client: redisClient,
+//   prefix: "session:", 
+// });
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET as string,
+  //  store: sessionStore, // ✅ Use the correctly initialized store
+    secret: process.env.SESSION_SECRET! as string,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      sameSite: 'none',
+      sameSite: "none",
+      secure: process.env.NODE_ENV === "production", 
+      httpOnly: true,
     },
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Prisma connection
 prisma
   .$connect()
   .then(() => {
@@ -256,14 +278,14 @@ prisma
     console.error('Error connecting to the database', err);
   });
 
-// Socket.IO server
 const server = createServer(app);
 export const io = new SocketIOServer(server, {
   cors: {
-    origin: '*', // Configure CORS as per your needs
+    origin: '*', 
   },
 });
 
+app.use('/health', routerHealth);
 app.use('/account/auth/register', registerRoutes);
 app.use('/account/auth/login', loginRoutes);
 app.use('/account/auth/forgotPassword', resetPasswordRouter);
@@ -272,6 +294,7 @@ app.use('/account/auth/verify', routerOtpLogin);
 app.use('/account/auth/verify', routerOtpReset);
 app.use('/account/auth/getUserDetails', getCurrentUser);
 app.use('/account/auth/getUserDetails', checkUserId);
+app.use('/account/auth/googleAuth', googleRouter);
 
 app.use('/account/posts/routes', postRouter);
 app.use('/account/contact', contactRouter);
@@ -341,6 +364,7 @@ app.use('/class/course/mediaActions/likes', classCourseLikes);
 app.use('/class/course/mediaActions/likeComment', likeClassCourseComments);
 app.use('/class/course/mediaActions/likeSubComment', likeClassCourseSubComments);
 app.use('/class/course/mediaActions/likeThirdComment', likeClassCourseThirdComments);
+app.use('/class/verifyClass', classVerifyRouter);
 
 app.use('/bootcamp/createBootCamp', createBootcampRouter);
 app.use('/bootcamp/contact', bootcampContactRouter);
@@ -446,15 +470,13 @@ app.use('/bootcamp/advance_class/course/mediaActions/likeComment', likeBootcampA
 app.use('/bootcamp/advance_class/course/mediaActions/likeSubComment', likeBootcampAdvanceClassCourseSubComments);
 app.use('/bootcamp/advance_class/course/mediaActions/likeThirdComment', likeBootcampAdvanceClassCourseThirdComments);
 app.use('/bootcamp/advance_class/pricing', bootCampAdvanceClassPricingRouter);
+app.use('/bootcamp/verifyBootCamp', bootcampVerifyRouter);
 
 app.use('/account/auth/logout', logoutRoute);
 
-const pubClient = createClient({ url: 'redis://localhost:6379' });
-const subClient = pubClient.duplicate();
-
-Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
-  io.adapter(createAdapter(pubClient, subClient));
-});
+// Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+//   io.adapter(createAdapter(pubClient, subClient));
+// });
 
 interface UsersRoom {
   roomId?: string;
@@ -488,15 +510,13 @@ io.on('connection', (socket:Socket) => {
 
 
   socket.on('join-private-chat', ({ userId, friendId }: { userId: string; friendId: string }) => {
-    // Create a unique room ID based on both users
-    const roomId = `private-${[userId, friendId].sort().join('-')}`; // Ensures the room ID is the same for both users regardless of order
+    const roomId = `private-${[userId, friendId].sort().join('-')}`; 
   
     usersRoom.set(socket.id, { roomId, userId });
     console.log(`User ${userId} joined private room: ${roomId}`);
     
     socket.join(roomId);
     
-    // Notify the other user that this user has joined
     io.to(roomId).emit('user-joined', { userId, roomId });
   });
 
@@ -507,7 +527,6 @@ io.on('connection', (socket:Socket) => {
     console.log(`User ${userId} left private room: ${roomId}`);
     socket.leave(roomId);
   
-    // Notify the other user that this user has left
     io.to(roomId).emit('user-left', { userId, roomId });
   });
 
@@ -581,8 +600,8 @@ io.on('connection', (socket:Socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+const PORT = process.env.PORT!;
+server.listen(PORT, '0.0.0.0' as any, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
@@ -595,3 +614,4 @@ process.on('SIGINT', async () => {
     process.exit();
   }
 });
+

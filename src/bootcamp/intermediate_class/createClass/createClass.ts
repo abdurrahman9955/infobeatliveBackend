@@ -1,5 +1,5 @@
 // src/services/group.service.ts
-import prisma from './prisma';
+import prisma from '../../../utils/prisma';
 import { Prisma } from '@prisma/client';
 
 class ClassService {
@@ -37,10 +37,11 @@ class ClassService {
       include: {
         creator: true,
         instructors: true,
-        students: true,
-        // classMediaUploads: true,
-        // chats: true,
-        // lectures: true,
+        students: {
+          where: {
+            isSuspended: false, 
+          },
+        },
       },
     });
   }
@@ -51,10 +52,14 @@ class ClassService {
       include: {
         creator: true,
         instructors: true,
-        students: true,
-        // classMediaUploads: true,
-        // chats: true,
-        // lectures: true,
+        students: {
+          where: {
+            isSuspended: false, 
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc', 
       },
     });
   }
@@ -104,6 +109,9 @@ class ClassService {
         // chats: true,
         // lectures: true,
       },
+      orderBy: {
+        createdAt: 'desc', 
+      },
     });
   }
 
@@ -116,6 +124,9 @@ class ClassService {
         // classMediaUploads: true,
         // chats: true,
         // lectures: true,
+      },
+      orderBy: {
+        createdAt: 'desc', 
       },
     });
   }

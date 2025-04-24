@@ -1,5 +1,5 @@
 // src/services/group.service.ts
-import prisma from './prisma';
+import prisma from '../../utils/prisma';
 import { Prisma } from '@prisma/client';
 
 class GroupService {
@@ -27,16 +27,28 @@ class GroupService {
     });
   }
 
-  async getGroupById(id: string) {
+  async getGroupByIdInTheGroup(id: string) {
     return prisma.group.findUnique({
       where: { id },
       include: {
         creator: true,
         admins: true,
         members: true,
-        // mediaUploads: true,
-        // chats: true,
-        // program: true,
+      },
+    });
+  }
+
+  async getGroupById(id: string) {
+    return prisma.group.findUnique({
+      where: { id },
+      include: {
+        creator: true,
+        admins: true,
+        members: {
+          where: {
+            isMember: true, 
+          },
+        },
       },
     });
   }
@@ -47,10 +59,14 @@ class GroupService {
       include: {
         creator: true,
         admins: true,
-        members: true,
-        // mediaUploads: true,
-        // chats: true,
-        // program: true,
+        members: {
+          where: {
+            isMember: true, 
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc', 
       },
     });
   }
@@ -113,6 +129,9 @@ class GroupService {
         creator: true,
         admins: true,
         members: true,
+      },
+      orderBy: {
+        createdAt: 'desc', 
       },
     });
   }

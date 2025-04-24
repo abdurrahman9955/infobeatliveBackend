@@ -39,10 +39,10 @@ export const createPost = async (req: Request, res: Response) => {
     for (let file of files) {
       if (type === 'IMAGE') {
         io.to(RoomId).emit('post-upload-progress', { progress: 20 });
-        const processedImage = await processImage(file.buffer);
+        // const processedImage = await processImage(file.buffer);
         io.to(RoomId).emit('post-upload-progress', { progress: 40 });
         const key = `images/${userId}/${groupId}/image/${uniqueFilename}/${Date.now()}-${file.originalname}`;
-        const contentUrl = await uploadToS3(processedImage, key, 'image/jpeg');
+        const contentUrl = await uploadToS3(file.buffer, key, file.mimetype);
         io.to(RoomId).emit('post-upload-progress', { progress: 70 });
         imageUrls.push(contentUrl);
       } else if (type === 'VIDEO') {

@@ -34,15 +34,15 @@ export const createChats = async (req: Request, res: Response) => {
       io.to(RoomId).emit('chats-upload-progress', { progress: 15 });
  
       let contentUrl: string | undefined = undefined;
- 
+
       // Processing based on message type
       if (type === ChatMessageType.IMAGE && file) {
         // Process the image
         io.to(RoomId).emit('chats-upload-progress', { progress: 20 });
-        const processedImage = await processImage(file.buffer);
+        // const processedImage = await processImage(file.buffer);
         io.to(RoomId).emit('chats-upload-progress', { progress: 40 });
         const key = `images/${userId}/image/${uniqueFilename}/${Date.now()}-${file.originalname}`;
-        contentUrl = await uploadToS3(processedImage, key, 'image/jpeg');
+        contentUrl = await uploadToS3(file.buffer, key, 'image/jpeg');
         io.to(RoomId).emit('chats-upload-progress', { progress: 70 });
       } else if (type === ChatMessageType.VIDEO && file) {
         // Process the video
@@ -189,7 +189,7 @@ export const createChats = async (req: Request, res: Response) => {
   export const getChat = async (req: Request, res: Response) => {
     try {
       const userId = req.params.userId;
-    
+   
       const chats = await prisma.chats.findMany({
         where: {
           OR: [
@@ -200,7 +200,7 @@ export const createChats = async (req: Request, res: Response) => {
         include: {
           friend: {
             include: {
-              User: {
+              user: {
                 include: {
                   profile: true,
                 },

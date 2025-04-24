@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../../utils/prisma";
 import { processImage } from "../../../../utils/sharp";
 import { uploadToS3, deleteFromS3 } from "../../../../utils/s3Upload";
 import { v4 as uuidv4 } from 'uuid';
 
-const prisma = new PrismaClient();
 
 // Create a new course
 export const createCourse = async (req: Request, res: Response) => {

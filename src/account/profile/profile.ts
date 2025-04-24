@@ -1,26 +1,19 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../utils/prisma';
 import multer, { MulterError } from 'multer';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import express, { Request, Response } from 'express';
 import { ObjectCannedACL } from '@aws-sdk/client-s3'; 
+import gm from 'gm';
 import dotenv from 'dotenv';
 
 dotenv.config();
 dotenv.config({ path: '../../../../../backend/.env' });
 
-const MY_S3_ACCESS_KEY = process.env.MY_S3_ACCESS_KEY!;
-const MY_S3_SECRET_KEY = process.env.MY_S3_ACCESS_KEY!;
-const MY_S3_REGION = 'us-east-1'
-const MY_S3_BUCKET_NAME  = 'infobeatlivebucket'
+const MY_S3_REGION = process.env.MY_S3_REGION!;
+const MY_S3_BUCKET_NAME  =  process.env.S3_BUCKET_NAME!;
 
-const prisma = new PrismaClient();
 const s3 = new S3Client({
-  credentials: {
-    accessKeyId:MY_S3_ACCESS_KEY,
-    secretAccessKey:MY_S3_SECRET_KEY,
-  },
   region:MY_S3_REGION,
 });
 
@@ -69,33 +62,12 @@ const handleFileUpload = async (req: Request, res: Response<UploadResponse>): Pr
 
     const uniqueFilename = uuidv4();
     const imageKey = `profile/${userId}/images/${uniqueFilename}.${file.originalname.split('.').pop()}`;
-    
-    const processedImageBuffer = await sharp(file.buffer)
-      .resize({
-        width: 300,
-        height: 300,
-        kernel: sharp.kernel.lanczos3,
-        fit: sharp.fit.cover,
-        position: sharp.strategy.entropy,
-      })
-      .toFormat('jpeg', {
-        quality:95,
-        nearLossless: true,
-      })
-      .withMetadata()
-      .toBuffer();
-
-    // const uploadParams = {
-    //   Bucket:MY_S3_BUCKET_NAME,
-    //   Key: imageKey,
-    //   Body: processedImageBuffer,
-    //   ACL: 'public-read' as ObjectCannedACL, // Cast the string to ObjectCannedACL
-    // };
 
     const uploadParams = {
       Bucket: MY_S3_BUCKET_NAME,
       Key: imageKey,
-      Body: processedImageBuffer,
+      Body: file.buffer,
+      ContentType: file.mimetype,
     };
 
     const uploadResult = await s3.send(new PutObjectCommand(uploadParams));

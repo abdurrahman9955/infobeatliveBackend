@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import { processImage } from "../../../utils/sharp";
 import { uploadToS3, deleteFromS3 } from "../../../utils/s3Upload";
 import { v4 as uuidv4 } from 'uuid';
-
-const prisma = new PrismaClient();
+import prisma from "../../../utils/prisma";
 
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
@@ -23,9 +21,9 @@ export const createSection = async (req: Request, res: Response) => {
     let thumbnailUrl: string | undefined = undefined;
 
     if (thumbnail) {
-      const processedImage = await processImage(thumbnail.buffer);
+     // const processedImage = await processImage(thumbnail.buffer);
       const key = `images/${courseId}/image/${uniqueFilename}/${Date.now()}-${thumbnail.originalname}`;
-      thumbnailUrl = await uploadToS3(processedImage, key, 'image/jpeg');
+      thumbnailUrl = await uploadToS3(thumbnail.buffer, key, thumbnail.mimetype);
     } else {
       return res.status(400).json({ message: 'Invalid or missing file' });
     }
@@ -133,9 +131,9 @@ export const updateSection = async (req: Request, res: Response) => {
 
     if (thumbnail) {
       const uniqueFilename = uuidv4();
-      const processedImage = await processImage(thumbnail.buffer);
+     // const processedImage = await processImage(thumbnail.buffer);
       const key = `images/${courseId}/image/${uniqueFilename}/${Date.now()}-${thumbnail.originalname}`;
-      updateData.thumbnailUrl = await uploadToS3(processedImage, key, 'image/jpeg');
+      updateData.thumbnailUrl = await uploadToS3(thumbnail.buffer, key, 'image/jpeg');
     }
 
     console.log("Updating section with id:", id, "and courseId:", courseId);

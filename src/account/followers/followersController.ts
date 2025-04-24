@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../utils/prisma';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -27,9 +27,6 @@ export interface Follower {
     
   }
   
-
-
-const prisma = new PrismaClient();
 
 
 export const getFollowingCount = async (req: Request<{ userId: string }>, res: Response<ApiResponse<any>>): Promise<void> => {
@@ -108,7 +105,7 @@ export const getFollowing = async (req: CustomRequest, res: Response<ApiResponse
       include: {
         FollowingProfile: {
           include: {
-            User: {
+            user: {
               include: {
                 profile: true,
               },

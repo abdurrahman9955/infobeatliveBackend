@@ -200,7 +200,7 @@ export const createChats = async (req: Request, res: Response) => {
         include: {
           friend: {
             include: {
-              User: {
+              user: {
                 include: {
                   profile: true,
                 },

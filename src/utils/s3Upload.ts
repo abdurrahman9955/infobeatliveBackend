@@ -5,9 +5,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const MY_S3_REGION = 'us-east-1'
-const MY_S3_BUCKET_NAME  =  'infobeatlivebucket'
-
+const MY_S3_REGION =process.env.MY_S3_REGION!;
+const MY_S3_BUCKET_NAME  =process.env.S3_BUCKET_NAME!;
 
 export const uploadToS3 = async (
   buffer: Buffer,

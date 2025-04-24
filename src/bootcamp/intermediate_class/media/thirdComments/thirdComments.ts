@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../utils/prisma';
 
-const prisma = new PrismaClient();
 const bootcampIntermediateClassThirdComments = express.Router();
 
 bootcampIntermediateClassThirdComments.get('/class/user/get/thirdComment/:subCommentId', async (req: Request, res: Response) => {

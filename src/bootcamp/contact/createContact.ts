@@ -1,7 +1,5 @@
 // src/services/classContactService.ts
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from "../../utils/prisma";
 
 export class ClassContactService {
   async getAllContacts( bootcampId: string) {

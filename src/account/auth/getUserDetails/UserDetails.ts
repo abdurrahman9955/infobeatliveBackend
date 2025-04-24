@@ -1,7 +1,5 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../../../utils/prisma';
 
 const getCurrentUser = express.Router();
 

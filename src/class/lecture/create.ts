@@ -1,7 +1,6 @@
- import { PrismaClient } from "@prisma/client";
- import { Request, Response } from "express";
-  
-  const prisma = new PrismaClient();
+import { Request, Response } from "express";
+import prisma from "../../utils/prisma";
+ 
 
   export const createProgram = async (req: Request, res: Response) => {
     try {

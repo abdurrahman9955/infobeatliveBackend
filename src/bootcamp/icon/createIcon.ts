@@ -9,11 +9,11 @@ class Service {
 
   async createIcon(  bootcampId:string, iconFile: Buffer, mimeType: string): Promise<any> {
     try {
-      const processedImage =  await processImage(iconFile);
-      
+      // const processedImage =  await processImage(iconFile);
+     
       const iconKey = `class-icons/${Date.now()}`;
 
-      const iconUrl = await uploadToS3(processedImage, iconKey, mimeType);
+      const iconUrl = await uploadToS3(iconFile, iconKey, mimeType);
 
       // Create a new class with the icon URL
       const newIcon = await prisma.bootcamp.update({

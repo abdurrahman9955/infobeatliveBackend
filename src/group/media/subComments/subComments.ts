@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../utils/prisma';
 
-const prisma = new PrismaClient();
 const groupSubComments = express.Router();
 
 groupSubComments.get('/group/user/get/subComment/:commentId', async (req: Request, res: Response) => {

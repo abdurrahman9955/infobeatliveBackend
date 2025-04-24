@@ -1,7 +1,5 @@
 // src/services/classFeedbackService.ts
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from "../../utils/prisma";
 
 export class ClassFeedbackService {
   async getAllFeedbacks(classId: string) {

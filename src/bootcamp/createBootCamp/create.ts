@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../../utils/prisma';
 
 // Create a new Bootcamp
 export const createBootcamp = async (req: Request, res: Response): Promise<void> => {
@@ -53,6 +51,9 @@ export const getAllBootcamps = async (req: Request, res: Response): Promise<void
       include: {
         creator: true,
         classes:true,
+      },
+      orderBy: {
+        createdAt: 'desc', 
       },
     });
     res.status(200).json(bootcamps);
@@ -162,6 +163,9 @@ export const getBootcampByUserId = async (req: Request, res: Response): Promise<
       include: {
         creator: true,
         classes:true,
+      },
+      orderBy: {
+        createdAt: 'desc', 
       },
     });
     if (!bootcamp) {

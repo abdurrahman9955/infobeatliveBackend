@@ -1,5 +1,9 @@
+// generator client {
+//   provider = "prisma-client-js"
+// }
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -127,29 +131,35 @@ model User {
   classSubscription                   CLassSubscription[]
   CLassPricing                        CLassPricing[]
   CLassPayoutMethod                   CLassPayoutMethod[]
+  classVerification                   VerifyClass[]
+  bootcampVerification                VerifyBootcamp[]
 
   @@index([email])
 }
 
 model Account {
-  id               String    @id @default(cuid())
-  userId           String    @unique @map("user_id")
+  id               String      @id @default(cuid())
+  userId           String      @unique @map("user_id")
   type             String
   provider         String
-  handle           String?   @unique
+  handle           String?     @unique
   refresh_token    String?
   access_token     String?
   otp              String?
   otpExpiration    DateTime?
   tempPassword     String?
   emailVerified    DateTime?
-  isVerified       Boolean   @default(false)
+  isVerified       Boolean     @default(false)
   resetToken       String?
   resetTokenExpiry DateTime?
   expires_at       DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  followers        Follower[]
+  following        Following[]
+  chats            Chats[]
+  supports         Support[]
 
   @@map("accounts")
 }
@@ -259,7 +269,7 @@ model Support {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  friend    Profile?         @relation(fields: [friendId], references: [userId], onDelete: Cascade)
+  friend    Account?         @relation(fields: [friendId], references: [userId], onDelete: Cascade)
 }
 
 model Chats {
@@ -274,7 +284,7 @@ model Chats {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  friend    Profile?         @relation(fields: [friendId], references: [userId], onDelete: Cascade)
+  friend    Account?         @relation(fields: [friendId], references: [userId], onDelete: Cascade)
 }
 
 model RePost {
@@ -504,6 +514,7 @@ model Class {
   updatedAt         DateTime            @updatedAt
   isVerified        Boolean             @default(false)
   isSuspended       Boolean             @default(false)
+  verify            VerificationStatus  @default(NONE)
   isBlocked         Boolean             @default(false)
   isChatsBlock      Boolean             @default(false)
   grade             Int                 @default(1)
@@ -522,6 +533,28 @@ model Class {
   CLassEarning      CLassEarning[]
   CLassPricing      CLassPricing[]
   CLassPayoutMethod CLassPayoutMethod[]
+  verification      VerifyClass[]
+}
+
+model VerifyClass {
+  id              String   @id @default(cuid())
+  userId          String
+  classId         String
+  country         String?
+  state           String?
+  email           String?
+  fullName        String?
+  linkedinProfile String?
+  phoneNumber     String?
+  aboutYourSelf   String?
+  howToRunClass   String?
+  personalBrand   String?
+  description     String?
+  why             String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class           Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
 }
 
 model CLassSubscription {
@@ -949,6 +982,7 @@ model Bootcamp {
   handle                    String?                     @unique
   isBlocked                 Boolean                     @default(false)
   isVerified                Boolean                     @default(false)
+  verify                    VerificationStatus          @default(NONE)
   isSuspended               Boolean                     @default(false)
   grade                     Int                         @default(1)
   creatorId                 String
@@ -967,6 +1001,28 @@ model Bootcamp {
   bootcampCLassEarning      BootcampCLassEarning[]
   bootcampCLassPricing      BootcampCLassPricing[]
   bootcampCLassPayoutMethod BootcampPayoutMethod[]
+  verification              VerifyBootcamp[]
+}
+
+model VerifyBootcamp {
+  id              String   @id @default(cuid())
+  userId          String
+  bootcampId      String
+  country         String?
+  state           String?
+  email           String?
+  fullName        String?
+  linkedinProfile String?
+  phoneNumber     String?
+  aboutYourSelf   String?
+  howToRunClass   String?
+  personalBrand   String?
+  description     String?
+  why             String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bootcamp        Bootcamp @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
 }
 
 model BootcampMeetings {
@@ -1680,17 +1736,13 @@ model LikeThirdComment {
 }
 
 model Profile {
-  id        String      @id @default(cuid())
-  userId    String      @unique
+  id        String   @id @default(cuid())
+  userId    String   @unique
   photoUrl  String?
   bannerUrl String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  followers Follower[]
-  following Following[]
-  chats     Chats[]
-  supports  Support[]
-  User      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Contact {
@@ -1731,7 +1783,7 @@ model Follower {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   User             User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
-  FollowingProfile Profile  @relation(fields: [followingId], references: [userId], onDelete: Cascade)
+  FollowingProfile Account? @relation(fields: [followingId], references: [userId], onDelete: Cascade)
 }
 
 model Following {
@@ -1742,7 +1794,7 @@ model Following {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   User             User     @relation(fields: [followerId], references: [id], onDelete: Cascade)
-  FollowingProfile Profile  @relation(fields: [followingId], references: [userId], onDelete: Cascade)
+  FollowingProfile Account? @relation(fields: [followingId], references: [userId], onDelete: Cascade)
 }
 
 model Admin {
@@ -1835,6 +1887,13 @@ enum FriendshipStatus {
   ACCEPTED
   DECLINED
   BLOCKED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECT
+  NONE
 }
 
 enum UserRole {
