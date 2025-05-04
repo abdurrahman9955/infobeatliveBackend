@@ -90,86 +90,13 @@ export const createPost = async (req: Request, res: Response) => {
   }
 };
 
-export const createPost1 = async (req: Request, res: Response) => {
-  try {
-    const { title, description, type } = req.body;
-    const file = req.file;
-    const userId = req.headers['user-id'] as string;
-
-    const roomId = `user-${userId}`;
-
-    io.to(roomId).emit('post-upload-progress', { progress: 5 });
-    if (!title || !description || !type) {
-      return res.status(400).json({ message: 'Missing required fields' });
-    }
-
-    io.to(roomId).emit('post-upload-progress', { progress: 10 });
-    if (!['VIDEO', 'IMAGE', 'TEXT'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid post type' });
-    }
-
-    const uniqueFilename = uuidv4();
-
-  
-    let contentUrl: string | undefined = undefined;
-    let thumbnailUrl: string | undefined = undefined;
-    io.to(roomId).emit('post-upload-progress', { progress: 15 });
-
-    if (type === 'IMAGE' && file) {
-      io.to(roomId).emit('post-upload-progress', { progress: 20 });
-      //const processedImage = await processImage(file.buffer);
-      io.to(roomId).emit('post-upload-progress', { progress: 40 });
-      const key = `images/${userId}/image/${uniqueFilename}/${Date.now()}-${file.originalname}`;
-      io.to(roomId).emit('post-upload-progress', { progress: 50 });
-      contentUrl = await uploadToS3(file.buffer, key, file.mimetype);
-      io.to(roomId).emit('post-upload-progress', { progress: 70 });
-    } else if (type === 'VIDEO' && file) {
-      io.to(roomId).emit('post-upload-progress', { progress: 20 });
-      const { videoBuffer, thumbnailBuffer } = await processVideo(file.buffer, file.originalname, roomId,);
-      const videoKey = `videos/${userId}/image/${uniqueFilename}/${Date.now()}-${file.originalname}`;
-      const thumbnailKey = `thumbnails/${userId}/thumbnail/${uniqueFilename}/${Date.now()}-${file.originalname}.jpeg`;
-      io.to(roomId).emit('post-upload-progress', { progress: 65 });
-      contentUrl = await uploadToS3(videoBuffer, videoKey, 'video/mp4');
-      io.to(roomId).emit('post-upload-progress', { progress: 73 });
-      thumbnailUrl = await uploadToS3(thumbnailBuffer, thumbnailKey, 'image/jpeg');
-      io.to(roomId).emit('post-upload-progress', { progress: 74 });
-    } else if (type === 'TEXT') {
-      io.to(roomId).emit('post-upload-progress', { progress: 50 });
-      contentUrl = '';
-      io.to(roomId).emit('post-upload-progress', { progress: 70 });
-    } else {
-      return res.status(400).json({ message: 'Invalid or missing file' });
-    }
-
-    io.to(roomId).emit('post-upload-progress', { progress: 75 });
-    const post = await prisma.post.create({
-      data: {
-        title,
-        description,
-        type,
-        contentUrl,
-        thumbnailUrl, // Save thumbnail URL in the database
-        userId,
-      },
-    });
-
-    io.to(roomId).emit('post-upload-progress', { progress: 95 });
-    io.to(roomId).emit('post-upload-progress', { progress: 100 });
-
-    res.status(201).json({ message: 'Post created successfully', post });
-  } catch (error) {
-    console.error('Error creating post:', error);
-    res.status(500).json({ message: 'An error occurred while creating the post' });
-  }
-};
-
 export const getPosts = async (req: Request, res: Response) => {
   try {
-
-    const { searchQuery } = req.query;
+    const { searchQuery, cursor, limit } = req.query;
 
     let wherePosts: any = {};
 
+    // If searchQuery exists, add filter
     if (searchQuery) {
       wherePosts = {
         OR: [
@@ -181,8 +108,19 @@ export const getPosts = async (req: Request, res: Response) => {
       };
     }
 
+    // Build the query
     const posts = await prisma.post.findMany({
       where: wherePosts,
+      take: Number(limit), // How many posts to return
+      ...(cursor && {
+       skip: 1, // Skip the post with the cursor ID itself
+        cursor: {
+          id: String(cursor), // Start after this ID
+        },
+      }),
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         user: {
           include: {
@@ -190,16 +128,18 @@ export const getPosts = async (req: Request, res: Response) => {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
     });
 
-     // Transform data to parse contentUrl safely
-     const formattedPosts = posts.map(post => ({
+    // Format contentUrl if it's a JSON string
+    const formattedPosts = posts.map((post) => ({
       ...post,
-      contentUrl: post.contentUrl ? JSON.parse(post.contentUrl) : null, // Ensure parsing only if not null
+      contentUrl: post.contentUrl ? JSON.parse(post.contentUrl) : null,
     }));
+
+    // Set the nextCursor for frontend to fetch more
+    // const nextCursor = posts.length === Number(limit)
+    //   ? posts[posts.length - 1].id
+    //   : null;
 
     res.status(200).json(formattedPosts);
   } catch (error) {
@@ -207,6 +147,112 @@ export const getPosts = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'An error occurred while fetching posts' });
   }
 };
+
+export const getVideoPosts = async (req: Request, res: Response) => {
+  try {
+    const { searchQuery, cursor, limit } = req.query;
+
+    let wherePosts: any = {};
+
+    // If searchQuery exists, add filter
+    if (searchQuery) {
+      wherePosts = {
+        OR: [
+          { id: { contains: searchQuery, mode: 'insensitive' } },
+          { userId: { contains: searchQuery, mode: 'insensitive' } },
+          { title: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    // Build the query
+    const posts = await prisma.post.findMany({
+      where:{ type:'VIDEO', ...wherePosts },
+      take: Number(limit), // How many posts to return
+      ...(cursor && {
+        skip: 1, // Skip the post with the cursor ID itself
+        cursor: {
+          id: String(cursor), // Start after this ID
+        },
+      }),
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
+
+    // Format contentUrl if it's a JSON string
+    const formattedPosts = posts.map((post) => ({
+      ...post,
+      contentUrl: post.contentUrl ? JSON.parse(post.contentUrl) : null,
+    }));
+
+    // // Set the nextCursor for frontend to fetch more
+    // const nextCursor = posts.length === Number(limit)
+    //   ? posts[posts.length - 1].id
+    //   : null;
+
+    res.status(200).json(formattedPosts);
+
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    res.status(500).json({ message: 'An error occurred while fetching posts' });
+  }
+};
+
+
+// export const getPosts = async (req: Request, res: Response) => {
+//   try {
+
+//     const { searchQuery } = req.query;
+
+//     let wherePosts: any = {};
+
+//     if (searchQuery) {
+//       wherePosts = {
+//         OR: [
+//           { id: { contains: searchQuery, mode: 'insensitive' } },
+//           { userId: { contains: searchQuery, mode: 'insensitive' } },
+//           { title: { contains: searchQuery, mode: 'insensitive' } },
+//           { description: { contains: searchQuery, mode: 'insensitive' } },
+//         ],
+//       };
+//     }
+
+//     const posts = await prisma.post.findMany({
+//       where: wherePosts,
+//       include: {
+//         user: {
+//           include: {
+//             profile: true,
+//           },
+//         },
+//       },
+//       orderBy: {
+//         createdAt: 'desc',
+//       },
+      
+//     });
+
+//      // Transform data to parse contentUrl safely
+//      const formattedPosts = posts.map(post => ({
+//       ...post,
+//       contentUrl: post.contentUrl ? JSON.parse(post.contentUrl) : null, // Ensure parsing only if not null
+//     }));
+
+//     res.status(200).json(formattedPosts);
+//   } catch (error) {
+//     console.error('Error fetching posts:', error);
+//     res.status(500).json({ message: 'An error occurred while fetching posts' });
+//   }
+// };
 
 export const getPostByUserId = async (req: Request, res: Response) => {
   try {

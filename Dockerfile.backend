@@ -30,7 +30,11 @@ RUN npx prisma generate
 
 RUN npm run build  
 
-EXPOSE 3500
+EXPOSE 8080
 
-CMD ["node", "dist/app.js"]
+#CMD ["node", "dist/app.js"]
+
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/app.js"]
+
+
 

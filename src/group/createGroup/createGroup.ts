@@ -107,7 +107,7 @@ class GroupService {
     });
   }
 
-  async getAllGroups(searchQuery?: string) {
+  async getAllGroups(searchQuery?: string, cursor?:string, limit?:number) {
 
     let whereGroups = {};
 
@@ -125,6 +125,13 @@ class GroupService {
 
     return prisma.group.findMany({
       where: whereGroups, 
+      take: Number(limit), // How many posts to return
+      ...(cursor && {
+        skip: 1, // Skip the post with the cursor ID itself
+        cursor: {
+          id: String(cursor), // Start after this ID
+        },
+      }),
       include: {
         creator: true,
         admins: true,

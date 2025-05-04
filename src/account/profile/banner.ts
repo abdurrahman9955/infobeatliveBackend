@@ -1,21 +1,12 @@
 import prisma from '../../utils/prisma';
 import multer, { MulterError } from 'multer';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import express, { Request, Response } from 'express';
-import { ObjectCannedACL } from '@aws-sdk/client-s3'; 
-import gm from 'gm';
 import dotenv from 'dotenv';
+import { deleteFromS3, uploadToS3 } from '../../utils/s3Upload';
 
 dotenv.config();
 dotenv.config({ path: '../../../../../backend/.env' });
-
-const MY_S3_REGION = process.env.MY_S3_REGION!;
-const MY_S3_BUCKET_NAME  =  process.env.S3_BUCKET_NAME!;
-
-const s3 = new S3Client({
-  region:MY_S3_REGION,
-});
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).single('image');
@@ -59,28 +50,19 @@ const handleFileUpload = async (req: Request, res: Response<UploadResponse>): Pr
       res.status(400).json({ success: false, error: 'No file provided', message: 'Upload failed' });
       return;
     }
-
-    const uniqueFilename = uuidv4();
-    const imageKey = `profile/${userId}/banner/${uniqueFilename}.${file.originalname.split('.').pop()}`;
-
-    const uploadParams = {
-      Bucket: MY_S3_BUCKET_NAME,
-      Key: imageKey,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
    
+    const uniqueFilename = uuidv4();
+    const fileExtension = file.originalname.split('.').pop();
+    const imageKey = `profile/${userId}/banner/${uniqueFilename}.${fileExtension}`;
 
-    const uploadResult = await s3.send(new PutObjectCommand(uploadParams));
+    // Upload to GCP Storage
+    const fileUrl = await uploadToS3(file.buffer, imageKey, file.mimetype);
 
-    if (!uploadResult) {
+    if (!fileUrl) {
       console.error('Error: Upload result is missing.');
       res.status(500).json({ success: false, error: 'Upload failed', message: 'Upload failed' });
       return;
     }
-
-    const bucketUrl = `https://${MY_S3_BUCKET_NAME}.s3.${MY_S3_REGION}.amazonaws.com`;
-    const fileUrl = `${bucketUrl}/${imageKey}`;
 
     const existingProfile = await prisma.profile.findUnique({
       where: { userId: userId },
@@ -155,13 +137,18 @@ bannerRoutes.get('/user/profile/banner/get', async (req: Request<{ userId: strin
         return res.status(404).json({ success: false, error: 'Profile image not found' });
       }
   
-      const imageKey = user.bannerUrl.split('/').slice(-1)[0];
-      const deleteParams = {
-        Bucket:MY_S3_BUCKET_NAME,
-        Key: `profile/${userId}/banner/${imageKey}`, 
-      };
-  
-      await s3.send(new DeleteObjectCommand(deleteParams));
+           
+            
+            const urlParts = user.bannerUrl.split('.digitaloceanspaces.com/');
+            const imageKey = urlParts[1];
+
+        
+            if (!imageKey) {
+              return res.status(400).json({ success: false, error: 'Invalid image URL' });
+            }
+       
+            // Delete file from GCP bucket
+            await deleteFromS3(imageKey);
   
       await prisma.profile.update({
         where: { userId: userId },

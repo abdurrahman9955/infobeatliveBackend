@@ -5,7 +5,8 @@ const getCurrentUser = express.Router();
 
 getCurrentUser.get('/getAllUsers', async (req, res) => {
   try {
-    const { searchQuery } = req.query;
+    
+    const { searchQuery, cursor, limit } = req.query;
 
     let whereUsers = {}; // Default condition
 
@@ -24,6 +25,14 @@ getCurrentUser.get('/getAllUsers', async (req, res) => {
 
     const allUsers = await prisma.user.findMany({
       where: whereUsers,
+      take: Number(limit), // How many posts to return
+      ...(cursor && {
+       // skip: 1, // Skip the post with the cursor ID itself
+        cursor: {
+          ...whereUsers,
+          id: String(cursor), // Start after this ID
+        },
+      }),
       select: {
         id:true,
         email: true,
@@ -48,7 +57,12 @@ getCurrentUser.get('/getAllUsers', async (req, res) => {
       return res.status(404).json({ success: false, error: 'No users found' });
     }
 
-    res.json({ success: true, allUsers });
+    // Set the nextCursor for frontend to fetch more
+    const nextCursor = allUsers.length === Number(limit)
+      ? allUsers[allUsers.length - 1].id
+      : null;
+
+    res.json({ success: true, allUsers, nextCursor, });
   } catch (error) {
     console.error('Error fetching current user:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });

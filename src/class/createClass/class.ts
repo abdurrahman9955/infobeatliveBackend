@@ -101,9 +101,16 @@ class ClassController {
     try {
 
       const searchQuery = req.query.searchQuery as string | undefined;
+      const {  cursor, limit } = req.query;
      
-      const groups = await ClassService.getAllClasses(searchQuery);
-      res.status(200).json(groups);
+      const groups = await ClassService.getAllClasses(searchQuery, cursor as string, limit as any);
+
+      // // Set the nextCursor for frontend to fetch more
+      // const nextCursor = groups.length === Number(limit)
+      // ? groups[groups.length - 1].id
+      // : null;
+
+      res.status(200).json( groups );
     } catch (error) {
       const typedError = error as Error;
       res.status(500).json({ message: 'Failed to fetch groups', error: typedError.message });

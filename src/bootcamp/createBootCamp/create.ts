@@ -31,6 +31,7 @@ export const getAllBootcamps = async (req: Request, res: Response): Promise<void
   try {
 
     const searchQuery = req.query.searchQuery as string | undefined;
+    const {  cursor, limit } = req.query;
     
     let whereGroups = {};
 
@@ -48,6 +49,13 @@ export const getAllBootcamps = async (req: Request, res: Response): Promise<void
 
     const bootcamps = await prisma.bootcamp.findMany({
       where: whereGroups,
+      take: Number(limit), // How many posts to return
+      ...(cursor && {
+        skip: 1, // Skip the post with the cursor ID itself
+        cursor: {
+          id: String(cursor), // Start after this ID
+        },
+      }),
       include: {
         creator: true,
         classes:true,
@@ -56,7 +64,13 @@ export const getAllBootcamps = async (req: Request, res: Response): Promise<void
         createdAt: 'desc', 
       },
     });
-    res.status(200).json(bootcamps);
+
+     // Set the nextCursor for frontend to fetch more
+    //  const nextCursor = bootcamps.length === Number(limit)
+    //  ? bootcamps[bootcamps.length - 1].id
+    //  : null;
+
+    res.status(200).json( bootcamps );
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch bootcamps' });
   }

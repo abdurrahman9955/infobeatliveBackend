@@ -166,6 +166,8 @@ export const createChats = async (req: Request, res: Response) => {
       const userId = req.params.userId
       const friendId = req.params.friendId
 
+      const { offset, limit } = req.query;
+
       const roomId = `private-${[userId, friendId].sort().join('-')}`;
  
       const chats = await prisma.chats.findMany({
@@ -177,6 +179,8 @@ export const createChats = async (req: Request, res: Response) => {
                 },
               },
          },
+        skip: Number(offset), 
+        take: Number(limit),
       });
 
       res.status(200).json({ data: chats });
@@ -189,13 +193,13 @@ export const createChats = async (req: Request, res: Response) => {
   export const getChat = async (req: Request, res: Response) => {
     try {
       const userId = req.params.userId;
-   
+      const { offset, limit } = req.query;
+
       const chats = await prisma.chats.findMany({
         where: {
-          OR: [
-            { userId }, // User sent the message
-            //{ friendId: userId }, // User received the message
-          ],
+          roomId: {
+             contains: userId, 
+          }, 
         },
         include: {
           friend: {
@@ -212,23 +216,32 @@ export const createChats = async (req: Request, res: Response) => {
           { createdAt: 'desc' },
           { updatedAt: 'desc' },
         ],
+        skip: Number(offset), 
+        take: Number(limit),
       });
 
 
+      // const uniqueChats = chats.reduce((acc: any[], chat) => {
+      //   const isChatWithFriend = acc.some(existingChat => {
+      //     return (
+      //       (existingChat.userId === chat.userId && existingChat.friendId === chat.friendId) ||
+      //       (existingChat.userId === chat.friendId && existingChat.friendId === chat.userId)
+      //     );
+      //   });
+  
+      //   if (!isChatWithFriend) {
+      //     acc.push(chat);
+      //   }
+  
+      //   return acc;
+      // }, []);
+
       const uniqueChats = chats.reduce((acc: any[], chat) => {
-        const isChatWithFriend = acc.some(existingChat => {
-          return (
-            (existingChat.userId === chat.userId && existingChat.friendId === chat.friendId) ||
-            (existingChat.userId === chat.friendId && existingChat.friendId === chat.userId)
-          );
-        });
-  
-        if (!isChatWithFriend) {
-          acc.push(chat);
-        }
-  
+        const alreadyAdded = acc.some(existing => existing.roomId === chat.roomId);
+        if (!alreadyAdded) acc.push(chat);
         return acc;
       }, []);
+      
   
       res.status(200).json({ data: uniqueChats });
     } catch (error) {
@@ -241,38 +254,22 @@ export const createChats = async (req: Request, res: Response) => {
     try {
       const userId = req.params.userId
       const groupId = req.params.groupId
-      const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10
-      const pageNumber = parseInt(page as string);
-      const limitNumber = parseInt(limit as string);
-      const skip = (pageNumber - 1) * limitNumber;
+      const { offset, limit } = req.query;
   
       const chats = await prisma.chats.findMany({
         where: { userId },
-        skip, // Skip the previous pages
-        take: limitNumber, // Limit to the requested number of chats
         include: {
           user: {
             include: {
               profile: true,
             },
           },
-         },//orderBy: {
-        //   createdAt: 'desc',
-        // },
+         },
+        skip: Number(offset), 
+        take: Number(limit),
       });
-  
-      // Total chat count for the user
-      const totalChats = await prisma.chats.count({ where: { userId } });
-      const totalPages = Math.ceil(totalChats / limitNumber);
-  
-      res.status(200).json({
-        data: chats,
-        pagination: {
-          currentPage: pageNumber,
-          totalPages,
-          totalChats,
-        },
-      });
+ 
+      res.status(200).json({ data: chats });
     } catch (error) {
       console.error('Error fetching user chats:', error);
       res.status(500).json({ message: 'An error occurred while fetching user chats' });
@@ -297,7 +294,7 @@ export const createChats = async (req: Request, res: Response) => {
 
   export const updateChats = async (req: Request, res: Response) => {
     try {
-      const {group, id } = req.params;
+      const { id } = req.params;
       const { content } = req.body;
   
       // Update the chat message in the database
@@ -305,14 +302,48 @@ export const createChats = async (req: Request, res: Response) => {
         where: { id },
         data: { content },
       });
+ 
+      // Emit the updated message to all connected clients in the group
+      const userId = updatedPost.userId; // Assuming groupId is part of the updated post
+
+      const friendId = updatedPost.friendId;
+      
+      const roomId = `private-${[userId, friendId].sort().join('-')}`;
+      
+      io.to(roomId).emit('private-new-message', {
+      id: updatedPost.id, content: updatedPost.content, });
+ 
+      // Send the response back to the client
+      res.status(200).json({ message: 'Post updated successfully', post: updatedPost });
+    } catch (error) {
+      console.error('Error updating post:', error);
+      res.status(500).json({ message: 'An error occurred while updating the post' });
+    }
+  };
+
+  export const updateWelcomeChats = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const {isRead } = req.body;
+  
+      // Update the chat message in the database
+      const updatedPost = await prisma.chats.update({
+        where: { id },
+        data: { isRead },
+      });
   
       // Emit the updated message to all connected clients in the group
-      const groupId = updatedPost.id; // Assuming groupId is part of the updated post
-      io.to(groupId).emit('chat-updated', {
+      const userId = updatedPost.userId; // Assuming groupId is part of the updated post
+
+      const friendId = updatedPost.friendId;
+
+      const roomId = `private-${[userId, friendId].sort().join('-')}`;
+
+      io.to(roomId).emit('private-new-message', {
         id: updatedPost.id,
         content: updatedPost.content,
       });
-  
+
       // Send the response back to the client
       res.status(200).json({ message: 'Post updated successfully', post: updatedPost });
     } catch (error) {
@@ -347,3 +378,41 @@ export const createChats = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'An error occurred while deleting the post' });
     }
   };
+
+  export const deleteWelcomeChat = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+  
+      // Step 1: Find the chat to get its roomId
+      const chat = await prisma.chats.findUnique({ where: { id } });
+  
+      if (!chat) {
+        return res.status(404).json({ message: 'Chat not found' });
+      }
+  
+      const roomId = chat.roomId;
+  
+      // Step 2: Find all chats with the same roomId
+      const chatsInRoom = await prisma.chats.findMany({ where: { roomId } });
+  
+      // Step 3: Delete associated files from S3
+      for (const chatItem of chatsInRoom) {
+        if (chatItem.fileUrl) {
+          const contentKey = chatItem.fileUrl.split('.com/')[1]; // Extract the key
+          if (contentKey) {
+            await deleteFromS3(contentKey);
+          }
+        }
+      }
+  
+      // Step 4: Delete all chats in the room
+      await prisma.chats.deleteMany({ where: { roomId } });
+  
+      res.status(200).json({ message: `All chats and associated files in room ${roomId} deleted successfully` });
+    } catch (error) {
+      console.error('Error deleting chats and files:', error);
+      res.status(500).json({ message: 'An error occurred while deleting the chats and files' });
+    }
+  };
+  
+  

@@ -23,6 +23,9 @@ CREATE TYPE "ChatMessageType" AS ENUM ('TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'DOCUM
 CREATE TYPE "FriendshipStatus" AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED', 'BLOCKED');
 
 -- CreateEnum
+CREATE TYPE "VerificationStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECT', 'NONE');
+
+-- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'EMPLOYE', 'USER');
 
 -- CreateTable
@@ -238,6 +241,7 @@ CREATE TABLE "Group" (
     "isMember" BOOLEAN NOT NULL DEFAULT false,
     "isAdmin" BOOLEAN NOT NULL DEFAULT false,
     "isChatsBlock" BOOLEAN NOT NULL DEFAULT false,
+    "isPrivate" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "createdBy" TEXT NOT NULL,
@@ -250,6 +254,7 @@ CREATE TABLE "GroupAdmin" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "groupId" TEXT NOT NULL,
+    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -261,6 +266,8 @@ CREATE TABLE "GroupMember" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "groupId" TEXT NOT NULL,
+    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
+    "isMember" BOOLEAN NOT NULL DEFAULT false,
     "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isBlocked" BOOLEAN NOT NULL DEFAULT false,
@@ -397,8 +404,8 @@ CREATE TABLE "Program" (
     "title" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "participantLimit" INTEGER,
-    "startDate" TIMESTAMP(3) NOT NULL,
-    "startTime" TIMESTAMP(3) NOT NULL,
+    "startDate" TEXT NOT NULL,
+    "startTime" TEXT NOT NULL,
     "category" TEXT NOT NULL,
     "timeZone" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -424,12 +431,35 @@ CREATE TABLE "Class" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "isSuspended" BOOLEAN NOT NULL DEFAULT false,
+    "verify" "VerificationStatus" NOT NULL DEFAULT 'NONE',
     "isBlocked" BOOLEAN NOT NULL DEFAULT false,
     "isChatsBlock" BOOLEAN NOT NULL DEFAULT false,
     "grade" INTEGER NOT NULL DEFAULT 1,
     "createdBy" TEXT NOT NULL,
 
     CONSTRAINT "Class_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerifyClass" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "classId" TEXT NOT NULL,
+    "country" TEXT,
+    "state" TEXT,
+    "email" TEXT,
+    "fullName" TEXT,
+    "linkedinProfile" TEXT,
+    "phoneNumber" TEXT,
+    "aboutYourSelf" TEXT,
+    "howToRunClass" TEXT,
+    "personalBrand" TEXT,
+    "description" TEXT,
+    "why" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "VerifyClass_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -708,8 +738,8 @@ CREATE TABLE "Lecture" (
     "title" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "participantLimit" INTEGER,
-    "startDate" TIMESTAMP(3) NOT NULL,
-    "startTime" TIMESTAMP(3) NOT NULL,
+    "startDate" TEXT NOT NULL,
+    "startTime" TEXT NOT NULL,
     "category" TEXT NOT NULL,
     "timeZone" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -868,6 +898,7 @@ CREATE TABLE "Bootcamp" (
     "handle" TEXT,
     "isBlocked" BOOLEAN NOT NULL DEFAULT false,
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
+    "verify" "VerificationStatus" NOT NULL DEFAULT 'NONE',
     "isSuspended" BOOLEAN NOT NULL DEFAULT false,
     "grade" INTEGER NOT NULL DEFAULT 1,
     "creatorId" TEXT NOT NULL,
@@ -880,6 +911,28 @@ CREATE TABLE "Bootcamp" (
 );
 
 -- CreateTable
+CREATE TABLE "VerifyBootcamp" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "bootcampId" TEXT NOT NULL,
+    "country" TEXT,
+    "state" TEXT,
+    "email" TEXT,
+    "fullName" TEXT,
+    "linkedinProfile" TEXT,
+    "phoneNumber" TEXT,
+    "aboutYourSelf" TEXT,
+    "howToRunClass" TEXT,
+    "personalBrand" TEXT,
+    "description" TEXT,
+    "why" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "VerifyBootcamp_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "BootcampMeetings" (
     "id" TEXT NOT NULL,
     "bootcampId" TEXT NOT NULL,
@@ -887,8 +940,8 @@ CREATE TABLE "BootcampMeetings" (
     "title" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "participantLimit" INTEGER,
-    "startDate" TIMESTAMP(3) NOT NULL,
-    "startTime" TIMESTAMP(3) NOT NULL,
+    "startDate" TEXT NOT NULL,
+    "startTime" TEXT NOT NULL,
     "category" TEXT NOT NULL,
     "timeZone" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -1365,8 +1418,8 @@ CREATE TABLE "BootcampLecture" (
     "title" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "participantLimit" INTEGER,
-    "startDate" TIMESTAMP(3) NOT NULL,
-    "startTime" TIMESTAMP(3) NOT NULL,
+    "startDate" TEXT NOT NULL,
+    "startTime" TEXT NOT NULL,
     "category" TEXT NOT NULL,
     "timeZone" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -1807,13 +1860,13 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_userId_fkey" FOREIGN KEY ("userId") REFE
 ALTER TABLE "Support" ADD CONSTRAINT "Support_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Support" ADD CONSTRAINT "Support_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "Profile"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Support" ADD CONSTRAINT "Support_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "accounts"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Chats" ADD CONSTRAINT "Chats_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Chats" ADD CONSTRAINT "Chats_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "Profile"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Chats" ADD CONSTRAINT "Chats_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "accounts"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RePost" ADD CONSTRAINT "RePost_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1901,6 +1954,12 @@ ALTER TABLE "Program" ADD CONSTRAINT "Program_groupId_fkey" FOREIGN KEY ("groupI
 
 -- AddForeignKey
 ALTER TABLE "Class" ADD CONSTRAINT "Class_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifyClass" ADD CONSTRAINT "VerifyClass_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifyClass" ADD CONSTRAINT "VerifyClass_classId_fkey" FOREIGN KEY ("classId") REFERENCES "Class"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CLassSubscription" ADD CONSTRAINT "CLassSubscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -2075,6 +2134,12 @@ ALTER TABLE "LikeClassCourseVideo" ADD CONSTRAINT "LikeClassCourseVideo_userId_f
 
 -- AddForeignKey
 ALTER TABLE "Bootcamp" ADD CONSTRAINT "Bootcamp_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifyBootcamp" ADD CONSTRAINT "VerifyBootcamp_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerifyBootcamp" ADD CONSTRAINT "VerifyBootcamp_bootcampId_fkey" FOREIGN KEY ("bootcampId") REFERENCES "Bootcamp"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BootcampMeetings" ADD CONSTRAINT "BootcampMeetings_bootcampId_fkey" FOREIGN KEY ("bootcampId") REFERENCES "Bootcamp"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -2383,13 +2448,13 @@ ALTER TABLE "Like" ADD CONSTRAINT "Like_userId_fkey" FOREIGN KEY ("userId") REFE
 ALTER TABLE "Follower" ADD CONSTRAINT "Follower_followerId_fkey" FOREIGN KEY ("followerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Follower" ADD CONSTRAINT "Follower_followingId_fkey" FOREIGN KEY ("followingId") REFERENCES "Profile"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Follower" ADD CONSTRAINT "Follower_followingId_fkey" FOREIGN KEY ("followingId") REFERENCES "accounts"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Following" ADD CONSTRAINT "Following_followerId_fkey" FOREIGN KEY ("followerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Following" ADD CONSTRAINT "Following_followingId_fkey" FOREIGN KEY ("followingId") REFERENCES "Profile"("userId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Following" ADD CONSTRAINT "Following_followingId_fkey" FOREIGN KEY ("followingId") REFERENCES "accounts"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Admin" ADD CONSTRAINT "Admin_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { createChats,getChats,getChat, getChatsById, updateChats, deleteChats, getChatsByUserId} from './chats';
+import { createChats,getChats,getChat, getChatsById, updateChats, updateWelcomeChats, deleteChats, deleteWelcomeChat, getChatsByUserId} from './chats';
 
 const userChatRouter = Router();
 const upload = multer();
@@ -9,8 +9,10 @@ userChatRouter.post('/upload/create/:userId/:friendId', upload.single('file'), c
 userChatRouter.get('/get/chats/:userId/:friendId', getChats);
 userChatRouter.get('/get/message/:userId', getChat);
 userChatRouter.get('/getByUserId/:userId', getChatsByUserId);
-userChatRouter.get('/get/:userId/:id', getChatsById);
-userChatRouter.put('/update/:userId/:id', updateChats);
-userChatRouter.delete('/delete/:userId/:id', deleteChats);
+userChatRouter.get('/get/:id', getChatsById);
+userChatRouter.put('/update/:id', updateChats);
+userChatRouter.put('/update/welcome/:id', updateWelcomeChats);
+userChatRouter.delete('/delete/:id', deleteChats);
+userChatRouter.delete('/delete/welcome/:id', deleteWelcomeChat);
 
 export default userChatRouter;

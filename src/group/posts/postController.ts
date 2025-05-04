@@ -109,7 +109,7 @@ export const getPostsByGroupId = async (req: Request, res: Response) => {
 
     const groupId = req.params.groupId as string;
 
-    const { searchQuery } = req.query;
+    const { searchQuery, offset = 0, limit = 10 } = req.query;
 
     let wherePosts: any = {};
 
@@ -137,6 +137,8 @@ export const getPostsByGroupId = async (req: Request, res: Response) => {
       orderBy: {
         createdAt: 'desc',
       },
+      skip: Number(offset), 
+      take: Number(limit),
     });
 
     const transformedPosts = posts.map((post) => {

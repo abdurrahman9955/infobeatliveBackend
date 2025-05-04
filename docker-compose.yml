@@ -1,41 +1,10 @@
-# services:
-#   backend:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile.backend
-#     ports:
-#       - "3500:3500"
-
-#     env_file:
-#       - .env 
-
-#     # depends_on:
-#     #   - redis  
-
-#     volumes:
-#       - ./node_modules:/src/node_modules 
-#       - ./uploads:/src/uploads  
-
-#     command: ["node", "dist/app.js"]  
-
-#   # redis:
-#   #   image: redis:latest
-#   #   container_name: redis_container
-#   #   ports:
-#   #     - "6379:6379"
-#   #   restart: always 
-
-# volumes:
-#   db-data:
-
-
 services:
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
     ports:
-      - "3500:3500"
+      - "8080:8080"
 
     env_file:
       - .env 
@@ -48,3 +17,4 @@ services:
 
 volumes:
   db-data:
+

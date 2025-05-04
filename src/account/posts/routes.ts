@@ -6,7 +6,9 @@ import {
   getPostById,
   updatePost,
   deletePost,
+  getVideoPosts,
   getPostByUserId
+  
 } from './postController';
 
 const postRouter = Router();
@@ -15,6 +17,7 @@ const upload = multer();
 postRouter.post('/upload/posts/create', upload.array('files', 12), createPost);
 //postRouter.post('/upload/posts/create', upload.single('file'), createPost);
 postRouter.get('/posts/get', getPosts);
+postRouter.get('/videos/posts/get', getVideoPosts);
 postRouter.get('/posts/getByUserId/:userId', getPostByUserId);
 postRouter.get('/post/get/:id', getPostById);
 postRouter.put('/post/update/:id', updatePost);

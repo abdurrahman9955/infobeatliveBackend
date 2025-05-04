@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatMessageType }  from '@prisma/client';
 import { uploadToS3, deleteFromS3 } from '../../utils/s3Upload'; 
 
-
 export const createChats = async (req: Request, res: Response) => {
     try {
       const {  content, type } = req.body;
@@ -144,7 +143,8 @@ export const createChats = async (req: Request, res: Response) => {
   export const getChats = async (req: Request, res: Response) => {
     try {
       const groupId = req.params.groupId;
-  
+      const {  offset, limit } = req.query;
+ 
       const chats = await prisma.groupChat.findMany({
         where: { groupId },
         include: {
@@ -154,9 +154,8 @@ export const createChats = async (req: Request, res: Response) => {
             },
           },
         },
-        // orderBy: {
-        //   createdAt: 'desc',
-        // },
+        skip: Number(offset), 
+        take: Number(limit),
       });
 
       res.status(200).json({ data: chats });
@@ -170,15 +169,10 @@ export const createChats = async (req: Request, res: Response) => {
   export const getChat = async (req: Request, res: Response) => {
     try {
       const groupId = req.params.groupId
-      const { page = 1, limit = 20 } = req.query; // Default to page 1 and limit 10
-      const pageNumber = parseInt(page as string);
-      const limitNumber = parseInt(limit as string);
-      const skip = (pageNumber - 1) * limitNumber;
+      const {  offset, limit } = req.query;
   
       const chats = await prisma.groupChat.findMany({
         where: {groupId},
-        skip, // Skip the previous pages
-        take: limitNumber, // Limit to the requested number of chats
         include: {
           user: {
             include: {
@@ -186,23 +180,12 @@ export const createChats = async (req: Request, res: Response) => {
             },
           },
          },
-         //orderBy: {
-        //   createdAt: 'desc',
-        // },
+        skip: Number(offset), 
+        take: Number(limit),
       });
  
-      // Total chat count for the group
-      const totalChats = await prisma.groupChat.count();
-      const totalPages = Math.ceil(totalChats / limitNumber);
   
-      res.status(200).json({
-        data: chats,
-        pagination: {
-          currentPage: pageNumber,
-          totalPages,
-          totalChats,
-        },
-      });
+      res.status(200).json({ data: chats });
     } catch (error) {
       console.error('Error fetching chats:', error);
       res.status(500).json({ message: 'An error occurred while fetching chats' });
@@ -213,38 +196,22 @@ export const createChats = async (req: Request, res: Response) => {
     try {
       const userId = req.params.userId
       const groupId = req.params.groupId
-      const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10
-      const pageNumber = parseInt(page as string);
-      const limitNumber = parseInt(limit as string);
-      const skip = (pageNumber - 1) * limitNumber;
+      const { offset, limit } = req.query;
   
       const chats = await prisma.groupChat.findMany({
         where: {groupId, userId },
-        skip, // Skip the previous pages
-        take: limitNumber, // Limit to the requested number of chats
         include: {
           user: {
             include: {
               profile: true,
             },
           },
-         },//orderBy: {
-        //   createdAt: 'desc',
-        // },
+         },
+        skip: Number(offset), 
+        take: Number(limit),
       });
   
-      // Total chat count for the user
-      const totalChats = await prisma.groupChat.count({ where: { userId } });
-      const totalPages = Math.ceil(totalChats / limitNumber);
-  
-      res.status(200).json({
-        data: chats,
-        pagination: {
-          currentPage: pageNumber,
-          totalPages,
-          totalChats,
-        },
-      });
+      res.status(200).json({ data: chats });
     } catch (error) {
       console.error('Error fetching user chats:', error);
       res.status(500).json({ message: 'An error occurred while fetching user chats' });

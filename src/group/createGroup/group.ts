@@ -117,8 +117,15 @@ class GroupController {
     try {
 
       const searchQuery = req.query.searchQuery as string | undefined;
+      const {  cursor, limit } = req.query;
      
-      const groups = await GroupService.getAllGroups(searchQuery);
+      const groups = await GroupService.getAllGroups(searchQuery, cursor as string, limit as any);
+
+      //   // Set the nextCursor for frontend to fetch more
+      //  const nextCursor = groups.length === Number(limit)
+      //  ? groups[groups.length - 1].id
+      //  : null;
+      
       res.status(200).json(groups);
     } catch (error) {
       const typedError = error as Error;

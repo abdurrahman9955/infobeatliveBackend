@@ -57,7 +57,7 @@ async function sendResendOtp(email: string, otp: number): Promise<void> {
           <p style="font-size: 18px; color: #000;">
             <strong>Your OTP code is:</strong>
           </p>
-          <div style="font-size: 28px; font-weight: bold; color: #2d7ff9; margin: 16px 0;">
+          <div style="font-size: 28px; font-weight: bold; color: #899719; margin: 16px 0;">
             ${otp}
           </div>
           <p style="font-size: 15px; color: #555;">

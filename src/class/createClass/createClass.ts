@@ -94,7 +94,7 @@ class ClassService {
     });
   }
 
-  async getAllClasses(searchQuery?: string) {
+  async getAllClasses(searchQuery?: string, cursor?:string, limit?:number) {
 
     let whereGroups = {};
 
@@ -112,6 +112,13 @@ class ClassService {
 
     return prisma.class.findMany({
       where: whereGroups,
+      take: Number(limit), // How many posts to return
+      ...(cursor && {
+        skip: 1, // Skip the post with the cursor ID itself
+        cursor: {
+          id: String(cursor), // Start after this ID
+        },
+      }),
       include: {
         creator: true,
         instructors: true,

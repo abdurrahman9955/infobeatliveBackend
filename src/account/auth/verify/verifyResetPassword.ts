@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 import prisma from '../../../utils/prisma';
-import { SES } from '@aws-sdk/client-ses';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
@@ -12,14 +11,7 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY!); 
 
-const MY_S3_REGION = process.env.MY_S3_REGION!;
-const AUTH_EMAIL = process.env.AUTH_EMAIL!;
-
 const routerOtpReset = express.Router();
-
-const ses = new SES({
-  region:MY_S3_REGION,
-});
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
@@ -211,7 +203,7 @@ async function sendResendOtp(email: string, otp: number): Promise<void> {
           <p style="font-size: 18px; color: #000;">
             <strong>Your OTP code is:</strong>
           </p>
-          <div style="font-size: 28px; font-weight: bold; color: #2d7ff9; margin: 16px 0;">
+          <div style="font-size: 28px; font-weight: bold; color: #899719; margin: 16px 0;">
             ${otp}
           </div>
           <p style="font-size: 15px; color: #555;">

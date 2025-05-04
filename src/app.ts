@@ -207,15 +207,14 @@ import userSupportChatRouter from './account/support/router';
 import googleRouter from './account/auth/googleAuth/google';
 import routerHealth from './health/health';
 import prisma from './utils/prisma';
-//import { createAdapter } from '@socket.io/redis-adapter';
-//import { createClient } from 'redis';
-//import {RedisStore} from "connect-redis"
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
+import {RedisStore} from "connect-redis"
 
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -239,7 +238,7 @@ app.use((req, res, next) => {
 app.use(morgan('combined'));
 app.use(cookieParser());
 
-// const redisHost = '54.89.80.108';  
+// const redisHost = process.env.REDIS_HOST!;
 
 // const pubClient = createClient({ url:`redis://${redisHost}:6379` });
 // const subClient = pubClient.duplicate();
@@ -247,14 +246,31 @@ app.use(cookieParser());
 // const redisClient = createClient({ url:`redis://${redisHost}:6379`});
 // redisClient.connect().catch(console.error);
 
-// const sessionStore = new RedisStore({
-//   client: redisClient,
-//   prefix: "session:", 
-// });
+const redisOptions = {
+  username: 'default',
+  password: 'nsaJjlEOc17qOFZUxJJWQWsrsjxRVxno',
+  socket: {
+    host: 'redis-19147.c39206.us-east-1-mz.ec2.cloud.rlrcp.com',
+    port: 19147,
+  },
+};
+
+const pubClient = createClient(redisOptions);
+const subClient = pubClient.duplicate();
+
+const redisClient = createClient(redisOptions);
+(async () => {
+  await redisClient.connect().catch(console.error);
+})();
+
+const sessionStore = new RedisStore({
+  client: redisClient,
+  prefix: "session:", 
+});
 
 app.use(
   session({
-  //  store: sessionStore, // ✅ Use the correctly initialized store
+    store: sessionStore, 
     secret: process.env.SESSION_SECRET! as string,
     resave: false,
     saveUninitialized: false,
@@ -331,7 +347,6 @@ app.use('/group/media/likeComment', likeGroupComments);
 app.use('/group/media/likeSubComment', likeGroupSubComments);
 app.use('/group/media/likeThirdComment', likeGroupThirdComments);
 app.use('/group/program', groupProgramRouter);
-
 
 app.use('/class/createClass', createClassRouter);
 app.use('/class/contact', classContactRouter);
@@ -441,7 +456,6 @@ app.use('/bootcamp/intermediate_class/course/mediaActions/likeSubComment', likeB
 app.use('/bootcamp/intermediate_class/course/mediaActions/likeThirdComment', likeBootcampIntermediateClassCourseThirdComments);
 app.use('/bootcamp/intermediate_class/pricing', bootCampIntermediateClassPricingRouter );
 
-
 app.use('/bootcamp/advance_class/createClass', createAdvanceClassRouter);
 app.use('/bootcamp/advance_class/Chattings', bootCampAdvanceChatRouter);
 app.use('/bootcamp/advance_class/contact', bootcampAdvanceClassContact);
@@ -471,12 +485,11 @@ app.use('/bootcamp/advance_class/course/mediaActions/likeSubComment', likeBootca
 app.use('/bootcamp/advance_class/course/mediaActions/likeThirdComment', likeBootcampAdvanceClassCourseThirdComments);
 app.use('/bootcamp/advance_class/pricing', bootCampAdvanceClassPricingRouter);
 app.use('/bootcamp/verifyBootCamp', bootcampVerifyRouter);
-
 app.use('/account/auth/logout', logoutRoute);
 
-// Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
-//   io.adapter(createAdapter(pubClient, subClient));
-// });
+Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+  io.adapter(createAdapter(pubClient, subClient));
+});
 
 interface UsersRoom {
   roomId?: string;
