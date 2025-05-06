@@ -220,22 +220,6 @@ export const createChats = async (req: Request, res: Response) => {
         take: Number(limit),
       });
 
-
-      // const uniqueChats = chats.reduce((acc: any[], chat) => {
-      //   const isChatWithFriend = acc.some(existingChat => {
-      //     return (
-      //       (existingChat.userId === chat.userId && existingChat.friendId === chat.friendId) ||
-      //       (existingChat.userId === chat.friendId && existingChat.friendId === chat.userId)
-      //     );
-      //   });
-  
-      //   if (!isChatWithFriend) {
-      //     acc.push(chat);
-      //   }
-  
-      //   return acc;
-      // }, []);
-
       const uniqueChats = chats.reduce((acc: any[], chat) => {
         const alreadyAdded = acc.some(existing => existing.roomId === chat.roomId);
         if (!alreadyAdded) acc.push(chat);

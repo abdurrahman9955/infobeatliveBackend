@@ -5,7 +5,7 @@ import ClassVerifyController from "./verify";
 const bootcampVerifyRouter = Router();
 
 bootcampVerifyRouter.post("/create/:userId/:bootcampId", ClassVerifyController.create);
-bootcampVerifyRouter.put("/update", ClassVerifyController.update);
+bootcampVerifyRouter.post("/update", ClassVerifyController.update);
 bootcampVerifyRouter.get("/get-all", ClassVerifyController.getAll);
 bootcampVerifyRouter.get("/get-all/:bootcampId", ClassVerifyController.getAllVerifyByClassId);
 bootcampVerifyRouter.get("/get/:id", ClassVerifyController.getById);

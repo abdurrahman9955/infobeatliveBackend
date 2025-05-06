@@ -192,12 +192,18 @@ export default class ClassVerifyService {
 
   static async getAllVerifyClass() {
     return prisma.verifyBootcamp.findMany({ 
+      where: {
+        bootcamp: {
+          isVerified: false,
+        },
+      },
       include: {
         user: {
           include: {
             profile: true,
           },
         },
+        bootcamp:true
       },
      });
   }
@@ -238,6 +244,7 @@ export default class ClassVerifyService {
             profile: true,
           },
         },
+        bootcamp:true
       },
      });
   }
@@ -252,6 +259,7 @@ export default class ClassVerifyService {
           profile: true,
         },
       },
+      bootcamp:true
     },
      });
   }

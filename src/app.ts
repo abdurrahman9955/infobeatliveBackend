@@ -62,6 +62,7 @@ import classLectureRouter from './class/lecture/router';
 import classPayoutRouter from './class/payoutMethods/router';
 import classPricingRouter from './class/pricing/router';
 import classVerifyRouter from './class/verifyClass/router';
+import classPaymentRouter from './class/payment/payment';
 
 import createBootcampRouter from './bootcamp/createBootCamp/bootCampMain';
 import bootcampContactRouter from './bootcamp/contact/contactRoute';
@@ -175,6 +176,8 @@ import likeBootcampAdvanceClassCourseComments from './bootcamp/advance_class/cou
 import likeBootcampAdvanceClassCourseSubComments from './bootcamp/advance_class/course/mediaActions/likeSubComment/likeSubComments';
 import likeBootcampAdvanceClassCourseThirdComments from './bootcamp/advance_class/course/mediaActions/likeThirdComment/likeThirdComment';
 import bootcampVerifyRouter from './bootcamp/verifyBootCamp/router';
+import academyClassPaymentRouter from './bootcamp/payment/payment';
+
 
 import registerRoutes from './account/auth/register/route';
 import loginRoutes from './account/auth/login/route';
@@ -380,6 +383,8 @@ app.use('/class/course/mediaActions/likeComment', likeClassCourseComments);
 app.use('/class/course/mediaActions/likeSubComment', likeClassCourseSubComments);
 app.use('/class/course/mediaActions/likeThirdComment', likeClassCourseThirdComments);
 app.use('/class/verifyClass', classVerifyRouter);
+app.use('/class/payment', classPaymentRouter);
+
 
 app.use('/bootcamp/createBootCamp', createBootcampRouter);
 app.use('/bootcamp/contact', bootcampContactRouter);
@@ -485,6 +490,7 @@ app.use('/bootcamp/advance_class/course/mediaActions/likeSubComment', likeBootca
 app.use('/bootcamp/advance_class/course/mediaActions/likeThirdComment', likeBootcampAdvanceClassCourseThirdComments);
 app.use('/bootcamp/advance_class/pricing', bootCampAdvanceClassPricingRouter);
 app.use('/bootcamp/verifyBootCamp', bootcampVerifyRouter);
+app.use('/bootcamp/payment', academyClassPaymentRouter);
 app.use('/account/auth/logout', logoutRoute);
 
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {

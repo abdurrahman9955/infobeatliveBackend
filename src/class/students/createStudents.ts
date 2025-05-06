@@ -1,9 +1,11 @@
 import prisma from '../../utils/prisma';
 class ClassMemberService {
   // Add a member to a group
-  
+ 
   async addMember(userId: string, classId: string) {
     try {
+     
+      
       const existingMember = await prisma.student.findUnique({
         where: { userId_classId: { userId, classId } },
       });

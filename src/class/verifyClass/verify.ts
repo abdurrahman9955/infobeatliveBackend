@@ -167,7 +167,17 @@ export default class ClassVerifyController {
         description, 
         conclusion,        
       } = req.body;
-
+     
+      console.log(userId, 
+        classId,
+        isVerified,        
+        verify,
+        subject, 
+        title, 
+        reason,
+        description, 
+        conclusion,   );
+        
       const classPricing = await ClassVerifyService.updateVerifyClass({
         userId,
         classId,
@@ -188,7 +198,7 @@ export default class ClassVerifyController {
   }
 
 
-  
+ 
   static async getAll(req: Request, res: Response) {
     try {
 

@@ -194,6 +194,10 @@ export default class ClassVerifyService {
     userId:string, classId:string, isVerified:boolean, verify:any, subject:string,
     title:string,  reason:string, description:string, conclusion:string
     }) {
+
+      if (!data.classId || !data.userId) {
+        throw new Error("classId and userId are required");
+      }
      
       const existingVerification = await prisma.verifyClass.findFirst({
         where: {
@@ -217,12 +221,18 @@ export default class ClassVerifyService {
 
   static async getAllVerifyClass() {
     return prisma.verifyClass.findMany({ 
+      where: {
+        class: {
+          isVerified: false,
+        },
+      },
       include: {
         user: {
           include: {
             profile: true,
           },
         },
+        class:true 
       },
      });
   }
@@ -236,6 +246,7 @@ export default class ClassVerifyService {
             profile: true,
           },
         },
+        class:true 
       },
      });
   }
@@ -250,6 +261,7 @@ export default class ClassVerifyService {
           profile: true,
         },
       },
+      class:true 
     },
      });
   }
