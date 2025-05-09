@@ -14,6 +14,7 @@ class ClassInstructorService {
            data: {
              userId,
              classId,
+             expiresAt: new Date(),
              planType:'INSTRUCTOR',
              level:'ADVANCED'
           },

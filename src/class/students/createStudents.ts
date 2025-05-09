@@ -17,7 +17,9 @@ class ClassMemberService {
         data: {
           userId,
           classId,
+          expiresAt: new Date(),
           planType:'MONTHLY'
+          
         },
       });
     

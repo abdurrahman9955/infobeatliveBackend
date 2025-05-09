@@ -133,6 +133,8 @@ model User {
   CLassPayoutMethod                   CLassPayoutMethod[]
   classVerification                   VerifyClass[]
   bootcampVerification                VerifyBootcamp[]
+  bootcampClassSubscribed             BootcampClassSubscribed[]
+  classSubscribed                     ClassSubscribed[]
 
   @@index([email])
 }
@@ -534,6 +536,7 @@ model Class {
   CLassPricing      CLassPricing[]
   CLassPayoutMethod CLassPayoutMethod[]
   verification      VerifyClass[]
+  classSubscribed   ClassSubscribed[]
 }
 
 model VerifyClass {
@@ -558,6 +561,18 @@ model VerifyClass {
 }
 
 model CLassSubscription {
+  id        String   @id @default(cuid())
+  classId   String
+  userId    String
+  type      String
+  amount    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+}
+
+model ClassSubscribed {
   id        String   @id @default(cuid())
   classId   String
   userId    String
@@ -689,6 +704,7 @@ model Student {
   amount      Int      @default(0)
   joinedAt    DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  expiresAt   DateTime
   isBlocked   Boolean  @default(false)
   isStudent   Boolean  @default(false)
   isSuspended Boolean  @default(false)
@@ -1002,6 +1018,7 @@ model Bootcamp {
   bootcampCLassPricing      BootcampCLassPricing[]
   bootcampCLassPayoutMethod BootcampPayoutMethod[]
   verification              VerifyBootcamp[]
+  bootcampClassSubscribed   BootcampClassSubscribed[]
 }
 
 model VerifyBootcamp {
@@ -1226,12 +1243,28 @@ model BootcampClass {
   bootcampSubscription      BootcampClassSubscription[]
   bootcampCLassEarning      BootcampCLassEarning[]
   bootcampCLassPricing      BootcampCLassPricing[]
+  bootcampClassSubscribed   BootcampClassSubscribed[]
 
   @@index([bootcampId])
   @@index([createdBy])
 }
 
 model BootcampClassSubscription {
+  id         String        @id @default(cuid())
+  bootcampId String
+  classId    String
+  userId     String
+  type       String
+  amount     Int           @default(0)
+  level      ClassLevel
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class      BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  bootcamp   Bootcamp      @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+}
+
+model BootcampClassSubscribed {
   id         String        @id @default(cuid())
   bootcampId String
   classId    String
@@ -1380,6 +1413,7 @@ model BootcampStudent {
   level       ClassLevel
   joinedAt    DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  expiresAt   DateTime
   class       BootcampClass @relation(fields: [classId], references: [id], onDelete: Cascade)
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -3,10 +3,120 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import prisma from '../../utils/prisma';
+import { Resend } from 'resend';
 
 dotenv.config();
 
 const classPaymentRouter = express.Router();
+
+const resend = new Resend(process.env.RESEND_API_KEY!); 
+
+async function sendResendOtp(email: string, className?:string, firstName?:string, lastName?:string ): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: 'noreply@infobeatlive.com',
+      to: email,
+      subject:`Welcome to ${className}, ${firstName}!`,
+      html: `
+       <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Class Subscription Confirmation</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        background-color: #ffffff;
+        max-width: 600px;
+        margin: 30px auto;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      }
+      .header {
+        background-color: #599334;
+        color: #ffffff;
+        padding: 30px;
+        text-align: center;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+      .body {
+        padding: 30px;
+        color: #333333;
+        line-height: 1.6;
+      }
+      .footer {
+        background-color: #f1f1f1;
+        text-align: center;
+        padding: 15px;
+        font-size: 13px;
+        color: #888;
+      }
+      .button {
+        display: inline-block;
+        margin-top: 20px;
+        background-color: #599334;
+        color: #ffffff !important;
+        padding: 12px 25px;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+      .signature {
+        margin-top: 25px;
+        font-style: italic;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Welcome to ${className}!</h1>
+      </div>
+      <div class="body">
+        <p>Hi ${firstName} ${lastName},</p>
+
+        <p>Thank you for subscribing to the <strong>${className}</strong> class on Infobeatlive.</p>
+
+         <p>We’re excited to have you on board and are committed to helping you learn, grow, and succeed 
+         with expert-led instruction and practical content tailored to your goals.</p>
+
+
+        <p>Your learning journey has just begun, and we can’t wait to see the progress you’ll make.</p>
+
+
+        <p>In the meantime, feel free to explore our platform and discover more opportunities to 
+        enhance your skills through Infobeatlive's powerful e-learning features.</p>
+
+
+        <a href="https://www.infobeatlive.com" class="button">Visit Our Website</a>
+
+        <p class="signature">Warm regards,<br />
+        The Infobeatlive Team</p>
+      </div>
+      <div class="footer">
+        &copy; ${new Date().getFullYear()} Infobeatlive. All rights reserved.<br/>
+        <a href="https://www.infobeatlive.com">infobeatlive</a>
+      </div>
+    </div>
+  </body>
+  </html>`,});
+
+  } catch (error) {
+    console.error('Resend email error:', error);
+    throw new Error('Failed to send OTP via Resend');
+  }
+}
+
 
 function verifySignature(secret: string, payload: string, signature: string): boolean {
   const hmac = crypto.createHmac('sha256', secret);
@@ -21,6 +131,7 @@ classPaymentRouter.post('/create-checkout/monthly/:id/:userId/:classId', async (
       const { id, userId, classId } = req.params;
 
       const variantId = process.env.LEMON_SQUEEZY_VARIANT_ID_MONTHLY!;
+      const store_id = process.env.LEMON_SQUEEZY_STORE_ID!;
 
       const existingPricing = await prisma.cLassPricing.findUnique({
         where:{ id, classId, },
@@ -34,60 +145,99 @@ classPaymentRouter.post('/create-checkout/monthly/:id/:userId/:classId', async (
          where:{ userId, classId, },
       });
 
+      const existingClass = await prisma.class.findUnique({
+        where:{ id:classId },
+     });
+
       if (existingSubscription) {
         await prisma.cLassSubscription.update({
-          where:{ id:existingSubscription.id },
-          data: { 
-            type:existingPricing.type,
-            amount:Number(existingPricing.amount)
+          where: { id: existingSubscription.id },
+          data: {
+            type: existingPricing.type,
+            amount: Number(existingPricing.amount),
           },
         });
-    }
-
-
-      if (!existingSubscription) {
-          await prisma.cLassSubscription.create({
-            data: {
-              classId,
-              userId,
-              type:existingPricing.type,
-              amount:Number(existingPricing.amount)
-            },
-          });
+      } else {
+        await prisma.cLassSubscription.create({
+          data: {
+            classId,
+            userId,
+            type: existingPricing.type,
+            amount: Number(existingPricing.amount),
+          },
+        });
       }
 
-      const checkoutData = {
-        checkout: {
-          variant_id: variantId,
-          custom_price:existingPricing.amount,
-          currency: 'USD',
-          expires_at: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
-          custom_data: {
-            user_id: userId,
-            class_id: classId,
-            currency: 'USD',
-            amount:Number(existingPricing.amount),
-            subscription_type:existingPricing.type
+      const checkoutSessionPayload = {
+        data: {
+          type: 'checkouts',
+          attributes: {
+            custom_price: Number(existingPricing.amount) * 100, // price in cents
+            product_options: {
+              redirect_url: `https://www.infobeatlive.com/class/home/${classId}`,
+              enabled_variants: [Number(variantId)], // Add this to only allow this variant
+            },
+            checkout_options: {
+              button_color: "#84cc16" // Optional but matches Lemon Squeezy example
+            },
+            checkout_data: {
+              custom: {
+                user_id: String(userId),
+                class_id: String(classId),
+                class_name: String(existingClass?.name || ''),
+                subscription_type: String(existingPricing.type),
+                amount: String(existingPricing.amount),
+              }
+            },
+            expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // Expires in 30 minutes
+           // preview: false,
+            test_mode: true,
+          },
+          relationships: {
+            store: {
+              data: {
+                type: 'stores',
+                id: store_id,
+              }
+            },
+            variant: {
+              data: {
+                type: 'variants',
+                id: variantId,
+              }
+            }
           }
         }
       };
-  
-      const response = await axios.post( 'https://api.lemonsqueezy.com/v1/checkouts',
-        checkoutData,
+      
+   
+      const response = await axios.post(
+        'https://api.lemonsqueezy.com/v1/checkouts',
+        checkoutSessionPayload,
         {
           headers: {
-            'Authorization': `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+            'Content-Type': 'application/vnd.api+json',
+            Accept: 'application/vnd.api+json',
           }
         }
       );
-  
-      res.json({ checkoutUrl: response.data.data.checkout.url });
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      res.status(500).json({ message: 'Something went wrong creating the checkout' });
-    }
+
+      const checkoutUrl = response.data?.data?.attributes?.url;
+
+       if (!checkoutUrl) {
+        console.log('Failed to generate checkout URL.');
+        throw new Error('Failed to generate checkout URL.');
+       }
+
+      res.json({ checkoutUrl });
+     } catch (error:any) {
+      console.log('Error creating checkout:', error.message);
+      res.status(500).json({ message:`Something went wrong creating the checkout ${error.message}` });
+     }
+
   });
+
 
   classPaymentRouter.post('/create-checkout/yearly/:id/:userId/:classId', async (req: Request, res: Response) => {
 
@@ -95,6 +245,7 @@ classPaymentRouter.post('/create-checkout/monthly/:id/:userId/:classId', async (
       const { id, userId, classId } = req.params;
 
       const variantId = process.env.LEMON_SQUEEZY_VARIANT_ID_YEARLY!;
+      const store_id = process.env.LEMON_SQUEEZY_STORE_ID!;
 
       const existingPricing = await prisma.cLassPricing.findUnique({
         where:{ id, classId, },
@@ -108,59 +259,97 @@ classPaymentRouter.post('/create-checkout/monthly/:id/:userId/:classId', async (
          where:{ userId, classId, },
       });
 
+      const existingClass = await prisma.class.findUnique({
+        where:{ id:classId },
+     });
+
       if (existingSubscription) {
         await prisma.cLassSubscription.update({
-          where:{ id:existingSubscription.id },
-          data: { 
-            type:existingPricing.type,
-            amount:Number(existingPricing.amount)
+          where: { id: existingSubscription.id },
+          data: {
+            type: existingPricing.type,
+            amount: Number(existingPricing.amount),
           },
         });
-    }
-
-
-      if (!existingSubscription) {
-          await prisma.cLassSubscription.create({
-            data: {
-              classId,
-              userId,
-              type:existingPricing.type,
-              amount:Number(existingPricing.amount)
-            },
-          });
+      } else {
+        await prisma.cLassSubscription.create({
+          data: {
+            classId,
+            userId,
+            type: existingPricing.type,
+            amount: Number(existingPricing.amount),
+          },
+        });
       }
 
-      const checkoutData = {
-        checkout: {
-          variant_id: variantId,
-          custom_price:existingPricing.amount,
-          currency: 'USD',
-          expires_at: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
-          custom_data: {
-            user_id: userId,
-            class_id: classId,
-            currency: 'USD',
-            amount:Number(existingPricing.amount),
-            subscription_type:existingPricing.type
+      const checkoutSessionPayload = {
+        data: {
+          type: 'checkouts',
+          attributes: {
+            custom_price: Number(existingPricing.amount) * 100, // price in cents
+            product_options: {
+              redirect_url: `https://www.infobeatlive.com/class/home/${classId}`,
+              enabled_variants:[Number(variantId)], // Add this to only allow this variant
+            },
+            checkout_options: {
+              button_color: "#84cc16" // Optional but matches Lemon Squeezy example
+            },
+            checkout_data: {
+              custom: {
+                user_id: String(userId),
+                class_id: String(classId),
+                class_name: String(existingClass?.name || ''),
+                subscription_type: String(existingPricing.type),
+                amount: String(existingPricing.amount),
+              }
+            },
+            expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // Expires in 30 minutes
+           // preview: false,
+            test_mode: true,
+          },
+          relationships: {
+            store: {
+              data: {
+                type: 'stores',
+                id:store_id,
+              }
+            },
+            variant: {
+              data: {
+                type: 'variants',
+                id:variantId,
+              }
+            }
           }
         }
       };
-  
-      const response = await axios.post( 'https://api.lemonsqueezy.com/v1/checkouts',
-        checkoutData,
+    
+      const response = await axios.post(
+        'https://api.lemonsqueezy.com/v1/checkouts',
+        checkoutSessionPayload,
         {
           headers: {
-            'Authorization': `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+            'Content-Type': 'application/vnd.api+json',
+            Accept: 'application/vnd.api+json',
           }
         }
       );
-  
-      res.json({ checkoutUrl: response.data.data.checkout.url });
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      res.status(500).json({ message: 'Something went wrong creating the checkout' });
-    }
+ 
+ 
+      const checkoutUrl = response.data?.data?.attributes?.url;
+
+      if (!checkoutUrl) {
+       console.log('Failed to generate checkout URL.');
+       throw new Error('Failed to generate checkout URL.');
+      }
+
+      res.json({ checkoutUrl });
+     } catch (error) {
+       console.log('Error creating checkout:', error);
+       res.status(500).json({ message: `Something went wrong creating the checkout ${error}` });
+     }
+
   });
 
   classPaymentRouter.post('/create-checkout/one-time/:id/:userId/:classId', async (req: Request, res: Response) => {
@@ -169,6 +358,7 @@ classPaymentRouter.post('/create-checkout/monthly/:id/:userId/:classId', async (
       const { id, userId, classId } = req.params;
 
       const variantId = process.env.LEMON_SQUEEZY_VARIANT_ID_ONE_TIME!;
+      const store_id = process.env.LEMON_SQUEEZY_STORE_ID!;
 
       const existingPricing = await prisma.cLassPricing.findUnique({
         where:{ id, classId, },
@@ -182,157 +372,96 @@ classPaymentRouter.post('/create-checkout/monthly/:id/:userId/:classId', async (
          where:{ userId, classId, },
       });
 
+      const existingClass = await prisma.class.findUnique({
+        where:{ id:classId },
+     });
+
       if (existingSubscription) {
         await prisma.cLassSubscription.update({
-          where:{ id:existingSubscription.id },
-          data: { 
-            type:existingPricing.type,
-            amount:Number(existingPricing.amount)
+          where: { id: existingSubscription.id },
+          data: {
+            type: existingPricing.type,
+            amount: Number(existingPricing.amount),
           },
         });
-    }
-
-
-      if (!existingSubscription) {
-          await prisma.cLassSubscription.create({
-            data: {
-              classId,
-              userId,
-              type:existingPricing.type,
-              amount:Number(existingPricing.amount)
-            },
-          });
+      } else {
+        await prisma.cLassSubscription.create({
+          data: {
+            classId,
+            userId,
+            type: existingPricing.type,
+            amount: Number(existingPricing.amount),
+          },
+        });
       }
 
-      const checkoutData = {
-        checkout: {
-          variant_id: variantId,
-          custom_price:existingPricing.amount,
-          currency: 'USD',
-          expires_at: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
-          custom_data: {
-            user_id: userId,
-            class_id: classId,
-            currency: 'USD',
-            amount:Number(existingPricing.amount),
-            subscription_type:existingPricing.type
+      const checkoutSessionPayload = {
+        data: {
+          type: 'checkouts',
+          attributes: {
+            custom_price: Number(existingPricing.amount) * 100, // price in cents
+            product_options: {
+              redirect_url: `https://www.infobeatlive.com/class/home/${classId}`,
+              enabled_variants: [Number(variantId)], // Add this to only allow this variant
+            },
+            checkout_options: {
+              button_color: "#84cc16" // Optional but matches Lemon Squeezy example
+            },
+            checkout_data: {
+              custom: {
+                user_id: String(userId),
+                class_id: String(classId),
+                class_name: String(existingClass?.name || ''),
+                subscription_type: String(existingPricing.type),
+                amount: String(existingPricing.amount),
+              }
+            },
+            expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // Expires in 30 minutes
+            //preview:false,
+            test_mode: true,
+          },
+          relationships: {
+            store: {
+              data: {
+                type: 'stores',
+                id: store_id,
+              }
+            },
+            variant: {
+              data: {
+                type: 'variants',
+                id: variantId,
+              }
+            }
           }
         }
       };
-  
-      const response = await axios.post( 'https://api.lemonsqueezy.com/v1/checkouts',
-        checkoutData,
+ 
+      const response = await axios.post(
+        'https://api.lemonsqueezy.com/v1/checkouts',
+        checkoutSessionPayload,
         {
           headers: {
-            'Authorization': `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY}`,
+            'Content-Type': 'application/vnd.api+json',
+            Accept: 'application/vnd.api+json',
           }
         }
       );
-  
-      res.json({ checkoutUrl: response.data.data.checkout.url });
-    } catch (error) {
-      console.error('Error creating checkout:', error);
-      res.status(500).json({ message: 'Something went wrong creating the checkout' });
-    }
-  }); 
-
-classPaymentRouter.post('/webhook',  express.raw({ type: 'application/json' }), async (req, res) => {
-
-  try {
-  
-    const signature = req.headers['x-signature'] as string;
-    const rawBody = req.body.toString('utf8');
-    const secret = process.env.LEMONSQUEEZY_SIGNING_SECRET!;
-  
-    const isValid = verifySignature(secret, rawBody, signature);
-    if (!isValid) {
-      return res.status(400).send('Invalid signature');
-    }
-  
-    const event = JSON.parse(rawBody);
-    const eventType = event.meta?.event_name;
  
-    if (eventType === 'subscription_payment_success' || eventType === 'order_created') {
-      const customData = event.data?.attributes?.custom_data;
+ 
+      const checkoutUrl = response.data?.data?.attributes?.url;
 
-      if (!customData) {
-        console.warn('Missing custom_data in webhook');
-        return res.status(400).send('Missing custom_data');
+      if (!checkoutUrl) {
+       console.log('Failed to generate checkout URL.');
+       throw new Error('Failed to generate checkout URL.');
       }
 
-      const existingMember = await prisma.student.findUnique({
-        where: { userId_classId: { userId: customData.user_id, classId: customData.class_id } },
-      });
-
-      if (existingMember) {
-          await prisma.student.update({
-            where: { id: existingMember.id},
-            data: { 
-                planType:customData.subscription_type, 
-                amount:Number(customData.amount),
-                isStudent:true, 
-                isSuspended: false 
-             },
-           
-          });
-      }
-    
-      if (!existingMember) {
-      await prisma.student.create({
-        data: {
-          userId:customData.user_id,
-          classId:customData.class_id,
-          planType:customData.subscription_type,
-          amount:Number(customData.amount),
-          isStudent:true,
-        },
-      });}
-
-      const classEarning = await prisma.cLassEarning.findFirst({
-        where: { classId: customData.class_id  },
-      });
-
-      if (classEarning) {
-        await prisma.cLassEarning.update({
-          where: { id:classEarning.id},
-          data: { 
-              balance:{ increment:Number(customData.amount) },
-              Total:{increment:Number(customData.amount)}, 
-             
-           }, });}
-
-           if (!classEarning) {
-            await prisma.cLassEarning.create({
-              data: {
-                classId:customData.class_id,
-                balance:Number(customData.amount),
-                payout:0,
-                Total:Number(customData.amount),
-              },
-            });}
-     }else {
-      console.log("Unhandled webhook event:", eventType);
+     res.json({ checkoutUrl });
+      } catch (error:any) {
+      console.log('Error creating checkout:', error.message);
+      res.status(500).json({ message:`Something went wrong creating the checkout ${error.message}` });
     }
-
-  
-    if (eventType === 'subscription_payment_failed') {
-      const customData = event.data?.attributes?.custom_data;
-      console.log('❌ Payment failed:');
-      // Notify user, stop access, etc.
-    }
-
-    if (eventType === 'subscription_created') {
-      console.log('📦 Subscription created.');
-    }
-  
-    res.status(200).send('Webhook received');
-    } catch (err) {
-    console.error('Webhook error:', err);
-    return res.status(500).send('Internal error');
-  }
-
   });
-  
- 
+
 export default classPaymentRouter;

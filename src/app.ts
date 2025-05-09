@@ -213,15 +213,26 @@ import prisma from './utils/prisma';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 import {RedisStore} from "connect-redis"
+import classWebhookRouter from './class/payment/webhook';
+import academyClassWebhookRouter from './bootcamp/payment/webhook';
+
+import classEarningRouter from './class/earning/earn';
+import academyEarningRouter from './bootcamp/earning/earn';
+import classSubscribeRouter from './class/earning/subscription';
+import academySubscribeRouter from './bootcamp/earning/subscryption';
 
 const app = express();
+
+app.use('/class/payment', classWebhookRouter);
+app.use('/bootcamp/payment', academyClassWebhookRouter);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin === 'https://www.infobeatlive.com' || origin === 'https://infobeatlive.com') {
+  if (origin === 'https://www.infobeatlive.com' || origin === 'https://infobeatlive.com' || origin === 'http://localhost:3000') {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
 
@@ -241,7 +252,7 @@ app.use((req, res, next) => {
 app.use(morgan('combined'));
 app.use(cookieParser());
 
-// const redisHost = process.env.REDIS_HOST!;
+// const redisHost = 'localhost' //process.env.REDIS_HOST!;
 
 // const pubClient = createClient({ url:`redis://${redisHost}:6379` });
 // const subClient = pubClient.duplicate();
@@ -384,6 +395,9 @@ app.use('/class/course/mediaActions/likeSubComment', likeClassCourseSubComments)
 app.use('/class/course/mediaActions/likeThirdComment', likeClassCourseThirdComments);
 app.use('/class/verifyClass', classVerifyRouter);
 app.use('/class/payment', classPaymentRouter);
+app.use('/class/earning', classEarningRouter);
+app.use('/class/earning', classSubscribeRouter);
+
 
 
 app.use('/bootcamp/createBootCamp', createBootcampRouter);
@@ -491,6 +505,8 @@ app.use('/bootcamp/advance_class/course/mediaActions/likeThirdComment', likeBoot
 app.use('/bootcamp/advance_class/pricing', bootCampAdvanceClassPricingRouter);
 app.use('/bootcamp/verifyBootCamp', bootcampVerifyRouter);
 app.use('/bootcamp/payment', academyClassPaymentRouter);
+app.use('/bootcamp/earning', academyEarningRouter);
+app.use('/bootcamp/earning', academySubscribeRouter);
 app.use('/account/auth/logout', logoutRoute);
 
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
